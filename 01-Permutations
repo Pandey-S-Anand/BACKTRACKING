@@ -1,0 +1,133 @@
+/*
+
+# Understanding Permutations
+
+The term nPr refers to the number of permutations of n distinct objects taken r at a time. It is mathematically represented by the formula:
+nPr= n! / (n−r)!
+
+When discussing permutations of an array, the terms n and r in the context of nPr can be defined as follows:
+
+n: This represents the total number of distinct elements in the array.
+r: This represents the number of elements you want to arrange.
+
+Case 1: Permutations of All Elements
+
+If you want to find the permutations of all elements in a array of length n, then you would set:
+
+r = n, In this case, the formula simplifies to:
+
+nPn = n! / (n - n)! = n!
+
+This means you are calculating all possible arrangements of the entire array.
+
+### Example
+
+For an array of size 3, say [a, b, c], the permutations are:
+
+- [a, b, c]
+- [a, c, b]
+- [b, a, c]
+- [b, c, a]
+- [c, a, b]
+- [c, b, a]
+
+There are 3! = 6 permutations in total, which matches 3P3.
+
+
+Case 2: Permutations of a Subset of Elements
+
+If you want to find permutations where you only arrange a subset of elements (say r elements from the array), then you would set:
+
+In this case, you would use:
+nPr= n! / (n−r)!
+
+### Example
+
+For an array [a, b, c, d] (size 4) and r = 2 (i.e., we are choosing 2 elements at a time), the possible permutations of 2 elements are:
+
+- [a, b]
+- [a, c]
+- [a, d]
+- [b, a]
+- [b, c]
+- [b, d]
+- [c, a]
+- [c, b]
+- [c, d]
+- [d, a]
+- [d, b]
+- [d, c]
+
+There are 4P2 = 4! / (4 - 2)! = 4! / 2! = (4 × 3 × 2 × 1) / (2 × 1) = 12 permutations in total.
+*/
+
+### Additional Information
+
+- Unlike combinations, where the order does not matter, in permutations, different orders of the same items are counted as different arrangements.
+  For example, if you select 2 letters from the set {A, B, C}, the arrangements AB and BA are considered different.
+*/
+
+// Method 1
+
+class Solution {
+    private List<List<Integer>> permutations;
+
+    public List<List<Integer>> permute(int[] arr) {
+        permutations = new ArrayList<>();
+        findPermutations(arr, new ArrayList<>(), new boolean[arr.length]);
+        return permutations;
+    }
+
+    private void findPermutations(int[] arr, List<Integer> currentPermutation, boolean[] visited) {
+        if (currentPermutation.size() == arr.length) {
+            permutations.add(new ArrayList<>(currentPermutation));
+            return;
+        }
+
+        for (int i = 0; i < arr.length; i++) {
+            if (!visited[i]) {
+                visited[i] = true;
+                currentPermutation.add(arr[i]);
+                findPermutations(arr, currentPermutation, visited);
+                currentPermutation.remove(currentPermutation.size() - 1);
+                visited[i] = false;
+            }
+        }
+    }
+}
+
+
+//Method 2
+
+class Solution {
+    private List<List<Integer>> permutations;
+
+    public List<List<Integer>> permute(int[] arr) {
+        permutations = new ArrayList<>();
+        findPermutations(arr, 0);
+        return permutations;
+    }
+
+    private void findPermutations(int[] arr, int index) {
+        if (index == arr.length) {
+            List<Integer> currentPermutation = new ArrayList<>();
+            for (int num : arr) {
+                currentPermutation.add(num);
+            }
+            permutations.add(currentPermutation);
+            return;
+        }
+
+        for (int i = index; i < arr.length; i++) {
+            swap(arr, index, i);
+            findPermutations(arr, index + 1);
+            swap(arr, index, i);
+        }
+    }
+
+    private void swap(int[] arr, int i, int j) {
+        int temp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = temp;
+    }
+}
