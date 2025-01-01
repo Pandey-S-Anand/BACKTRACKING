@@ -1,8 +1,7 @@
 /*
-
 # Understanding Permutations
 
-The term nPr refers to the number of permutations of n distinct objects taken r at a time. It is mathematically represented by the formula:
+The term nPr refers to the number of permutations of n distinct objects taken r at a time. It is mathematically represented by the formula: 
 nPr= n! / (n−r)!
 
 When discussing permutations of a string, the terms n and r in the context of nPr can be defined as follows:
@@ -124,6 +123,7 @@ class Solution {
         }
     }
 }
+
 
 
 //Method 2
