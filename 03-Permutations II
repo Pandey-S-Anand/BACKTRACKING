@@ -1,0 +1,241 @@
+/*
+If an array contains duplicate elements and we try to generate the permutations of the array (i.e., permutations of all the elements of the array, where n=r in nPr), then duplicate permutations will be generated. 
+To find the number of distinct permutations of an array containing duplicate elements, we use the following formula:
+
+Number of distinct permutations of an array (containing duplicate elements) = n! / (k1! × k2! × … × km!)
+
+Where:
+
+n is the total number of elements in the array i.e (length of the array).
+k1, k2, …, km are the frequencies (counts) of each unique element in the array.
+
+Explanation:
+The total number of permutations of an array with n elements is n!.
+If some elements are repeated, the repeated permutations are counted multiple times in n!. To account for this, we divide by the factorial of the frequency of each repeated element to avoid over-counting.
+
+Example:
+For the array [A, A, B], the distinct permutations would be calculated as follows:
+
+Total number of elements n = 3 (A appears 2 times, B appears 1 time).
+The formula becomes:
+Number of distinct permutations = 3! / (2! × 1!)
+
+Calculating the factorials:
+3! = 6, 2! = 2, 1! = 1
+
+Plugging in the values:
+Number of distinct permutations = 6 / (2 × 1) = 3
+
+The distinct permutations of [A, A, B] are: [A, A, B], [A, B, A], and [B, A, A].
+*/
+
+
+//Method 1
+
+//Naive Implementation
+
+class Solution {
+    private Set<List<Integer>> uniquePermutations;
+
+    public List<List<Integer>> permuteUnique(int[] arr) {
+        uniquePermutations = new HashSet<>();
+        findUniquePermutations(arr, new ArrayList<>(), new boolean[arr.length]);
+        return new ArrayList<>(uniquePermutations);
+    }
+
+    private void findUniquePermutations(int[] arr, List<Integer> currentPermutation, boolean[] visited) {
+        if (currentPermutation.size() == arr.length) {
+            if (!uniquePermutations.contains(currentPermutation)) {
+                uniquePermutations.add(new ArrayList<>(currentPermutation));
+            }
+            return;
+        }
+
+        for (int i = 0; i < arr.length; i++) {
+            if (!visited[i]) {
+                visited[i] = true;
+                currentPermutation.add(arr[i]);
+                findUniquePermutations(arr, currentPermutation, visited);
+                currentPermutation.remove(currentPermutation.size() - 1);
+                visited[i] = false;
+            }
+        }
+    }
+}
+
+
+//Better Implementation
+
+
+class Solution {
+    public List<List<Integer>> permuteUnique(int[] arr) {
+        Arrays.sort(arr);
+        List<List<Integer>> uniquePermutations = new ArrayList<>();
+        findUniquePermutations(arr, new ArrayList<>(), uniquePermutations, new boolean[arr.length]);
+        return uniquePermutations;
+    }
+
+    private void findUniquePermutations(int[] arr, List<Integer> currentPermutation, List<List<Integer>> uniquePermutations, boolean[] visited) {
+        if (currentPermutation.size() == arr.length) {
+            uniquePermutations.add(new ArrayList<>(currentPermutation));
+            return;
+        }
+
+        for (int i = 0; i < arr.length; i++) {
+            /*
+             * Why are we exactly using !visited[i - 1]?
+             * 
+             * 1: To avoid generating duplicate permutations, we need to ensure that we do
+             * not include the same element multiple times at the same level of recursion.
+             * 2: If arr[i] is the same as arr[i - 1] (i.e., a duplicate) and arr[i - 1] has
+             * not been used (!visited[i - 1]), it means we are at the same level of
+             * recursion and should skip arr[i] to avoid generating a duplicate permutation.
+             * If arr[i] is the same as arr[i - 1] (i.e., a duplicate) and arr[i - 1] has
+             * been used (visited[i - 1]==true) it means we are at different level of
+             * recursion and can proceed with a duplicate element as it generates a new
+             * permutation different from those generated at the same level as arr[i - 1].
+             */
+            if (i > 0 && arr[i - 1] == arr[i] && !visited[i - 1]) {
+                continue;
+            }
+            if (!visited[i]) {
+                visited[i] = true;
+                currentPermutation.add(arr[i]);
+                findUniquePermutations(arr, currentPermutation, uniquePermutations, visited);
+                currentPermutation.remove(currentPermutation.size() - 1);
+                visited[i] = false;
+            }
+        }
+    }
+}
+
+
+//Optimal Implementation
+
+class Solution {
+    private List<List<Integer>> uniquePermutations;
+
+    public List<List<Integer>> permuteUnique(int[] arr) {
+        uniquePermutations = new ArrayList<>();
+        findUniquePermutations(arr, new ArrayList<>(), new boolean[arr.length]);
+        return uniquePermutations;
+    }
+
+    private void findUniquePermutations(int[] arr, List<Integer> currentPermutation, boolean[] visited) {
+        if (currentPermutation.size() == arr.length) {
+            uniquePermutations.add(new ArrayList<>(currentPermutation));
+            return;
+        }
+
+        // To keep track of elements used at the current level of recursion
+        Set<Integer> used = new HashSet<>();
+
+        for (int i = 0; i < arr.length; i++) {
+            if (used.contains(arr[i])) {
+                continue; // Skip duplicates
+            }
+
+            if (!visited[i]) {
+                used.add(arr[i]);
+                visited[i] = true;
+                currentPermutation.add(arr[i]);
+                findUniquePermutations(arr, currentPermutation, visited);
+                currentPermutation.remove(currentPermutation.size() - 1);
+                visited[i] = false;
+            }
+        }
+    }
+}
+
+
+// Method 2
+
+//Naive Implementation
+
+class Solution {
+    private Set<List<Integer>> uniquePermutations;
+
+    public List<List<Integer>> permuteUnique(int[] arr) {
+        uniquePermutations = new HashSet<>();
+        findUniquePermutations(arr, 0);
+        return new ArrayList<>(uniquePermutations);
+    }
+
+    private void findUniquePermutations(int[] arr, int index) {
+        if (index == arr.length) {
+            List<Integer> currentPermutation = new ArrayList<>();
+            for (int num : arr) {
+                currentPermutation.add(num);
+            }
+            uniquePermutations.add(currentPermutation);
+
+            return;
+        }
+
+        for (int i = index; i < arr.length; i++) {
+            swap(arr, index, i);
+            findUniquePermutations(arr, index + 1);
+            swap(arr, index, i);
+        }
+    }
+
+    private void swap(int[] arr, int i, int j) {
+        int temp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = temp;
+    }
+}
+
+
+
+//Optimal Implementation
+
+/*
+Purpose of sorting :
+Sorting is used to bring duplicate elements together, so adjacent duplicates can be easily identified and skipped during permutation generation.
+
+Why sorting and then skipping won't work here ?
+
+Because we are manipulating the input array itself to form the permutation which involves swapping. If you sort the array and then swap elements, the order of elements is modified,the array is no longer in its sorted order, which invalidates the duplicate-checking logic (arr[i] == arr[i - 1]) that assumes adjacent duplicates.
+*/
+
+class Solution {
+    private List<List<Integer>> uniquePermutations;
+
+    public List<List<Integer>> permuteUnique(int[] arr) {
+        uniquePermutations = new ArrayList<>();
+        findUniquePermutations(arr, 0);
+        return uniquePermutations;
+    }
+
+    private void findUniquePermutations(int[] arr, int index) {
+        if (index == arr.length) {
+            List<Integer> currentPermutation = new ArrayList<>();
+            for (int num : arr) {
+                currentPermutation.add(num);
+            }
+            uniquePermutations.add(currentPermutation);
+            return;
+        }
+
+        // To keep track of elements used at the current level of recursion
+        Set<Integer> used = new HashSet<>();
+
+        for (int i = index; i < arr.length; i++) {
+            if (used.contains(arr[i])) {
+                continue; // Skip duplicates
+            }
+
+            used.add(arr[i]);
+            swap(arr, index, i);
+            findUniquePermutations(arr, index + 1);
+            swap(arr, index, i);
+        }
+    }
+
+    private void swap(int[] arr, int i, int j) {
+        int temp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = temp;
+    }
+}
