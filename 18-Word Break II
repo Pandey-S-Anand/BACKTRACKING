@@ -1,138 +1,107 @@
-//Method 1
-
-//Bruteforce Approach
+//Naive implementation
 
 class Solution {
-    private Set<String> dictionary; // A set to store the dictionary words for quick lookup
+    // List to collect all valid sentences formed by breaking the input string
     private List<String> sentences;
+
+    // Set to hold dictionary words for quick O(1) lookup
+    private Set<String> dictionary;
+
+    // Variables to store the minimum and maximum word lengths in the dictionary
+    private int minWordLength;
+    private int maxWordLength;
 
     public List<String> wordBreak(String str, List<String> wordDict) {
         dictionary = new HashSet<>(wordDict);
         sentences = new ArrayList<>();
+
+        // Initialize word length bounds
+        minWordLength = Integer.MAX_VALUE;
+        maxWordLength = Integer.MIN_VALUE;
+
+        // Determine the minimum and maximum lengths of words in the dictionary
+        findSmallestAndLargestWordInDictionary(wordDict);
+
+        // Start recursive sentence formation
         wordBreak(str, "");
+
         return sentences;
     }
 
-    private void wordBreak(String str, String currentSentence) {
-        // Base case: If the remaining string is empty, add the formed sentence to the list
+    private void wordBreak(String str, String sentenceSoFar) {
+        // Base case: if no more characters to process, save the complete sentence
         if (str.isEmpty()) {
-            sentences.add(currentSentence.trim());
+            sentences.add(sentenceSoFar.trim()); // trim to remove leading space
             return;
         }
 
         StringBuilder prefix = new StringBuilder();
 
-        // Loop through the string to try different partitions
+        // Try all possible prefixes starting from index 0
         for (int partition = 0; partition < str.length(); partition++) {
             prefix.append(str.charAt(partition));
-            String currentPrefix = prefix.toString();
-            // If the current prefix is a valid word in the dictionary
-            if (dictionary.contains(currentPrefix)) {
-                // Recursively process the remaining string after this prefix
-                wordBreak(str.substring(partition + 1), currentSentence + " " + currentPrefix);
-            }
-        }
-    }
-}
 
-
-//Improved Approach
-
-class Solution {
-    private Set<String> dictionary;
-    private List<String> sentences;
-    private int maxWordLength;
-    private int minWordLength;
-
-    public List<String> wordBreak(String str, List<String> wordDict) {
-        dictionary = new HashSet<>(wordDict);
-        sentences = new ArrayList<>();
-        maxWordLength = Integer.MIN_VALUE;
-        minWordLength = Integer.MAX_VALUE;
-        
-        // Calculate the max and min word lengths in the dictionary
-        int left = 0;
-        int right = wordDict.size() - 1;
-
-        while (left <= right) {
-            int leftWordLength = wordDict.get(left).length();
-            int rightWordLength = wordDict.get(right).length();
-
-            maxWordLength = Math.max(maxWordLength, Math.max(leftWordLength, rightWordLength));
-            minWordLength = Math.min(minWordLength, Math.min(leftWordLength, rightWordLength));
-
-            left++;
-            right--;
-        }
-
-        wordBreak(str, 0, "");
-        return sentences;
-    }
-
-    private void wordBreak(String str, int start, String currentSentence) {
-        if (start == str.length()) {
-            sentences.add(currentSentence.trim());
-            return;
-        }
-
-        StringBuilder prefix = new StringBuilder();
-
-        for (int partition = start; partition < str.length(); partition++) {
-            prefix.append(str.charAt(partition));
-            // Skip if the current prefix is shorter than the shortest word in the dictionary
+            // Skip if prefix is smaller than any word in the dictionary
             if (prefix.length() < minWordLength) {
                 continue;
             }
-            
-            // Break if the current prefix is longer than the longest word in the dictionary
+
+            // Stop exploring if prefix exceeds max word length in dictionary
             if (prefix.length() > maxWordLength) {
                 break;
             }
 
             String currentPrefix = prefix.toString();
+            // If prefix is a valid word, recursively continue with the remaining string
             if (dictionary.contains(currentPrefix)) {
-                wordBreak(str, partition + 1, currentSentence + " " + currentPrefix);
+                // Add a space before appending prefix to sentenceSoFar
+                wordBreak(str.substring(partition + 1), sentenceSoFar + " " + currentPrefix);
             }
+        }
+    }
+
+    private void findSmallestAndLargestWordInDictionary(List<String> wordDict) {
+        int low = 0, high = wordDict.size() - 1;
+
+        // Loop to efficiently compare word lengths from both ends of the list
+        while (low <= high) {
+            int len1 = wordDict.get(low).length();
+            int len2 = wordDict.get(high).length();
+
+            // Update min and max word lengths encountered so far
+            minWordLength = Math.min(minWordLength, Math.min(len1, len2));
+            maxWordLength = Math.max(maxWordLength, Math.max(len1, len2));
+
+            low++;
+            high--;
         }
     }
 }
 
 
-// Better Approach
+//Optimal implementation
 
 class Solution {
-    private Set<String> dictionary;
     private List<String> sentences;
-    private int maxWordLength;
+    private Set<String> dictionary;
     private int minWordLength;
+    private int maxWordLength;
 
     public List<String> wordBreak(String str, List<String> wordDict) {
         dictionary = new HashSet<>(wordDict);
         sentences = new ArrayList<>();
-        maxWordLength = Integer.MIN_VALUE;
         minWordLength = Integer.MAX_VALUE;
+        maxWordLength = Integer.MIN_VALUE;
 
-        int left = 0;
-        int right = wordDict.size() - 1;
-
-        while (left <= right) {
-            int leftWordLength = wordDict.get(left).length();
-            int rightWordLength = wordDict.get(right).length();
-
-            maxWordLength = Math.max(maxWordLength, Math.max(leftWordLength, rightWordLength));
-            minWordLength = Math.min(minWordLength, Math.min(leftWordLength, rightWordLength));
-
-            left++;
-            right--;
-        }
-
+        findSmallestAndLargestWordInDictionary(wordDict);
         wordBreak(str, 0, new StringBuilder());
+
         return sentences;
     }
 
-    private void wordBreak(String str, int start, StringBuilder currentSentence) {
+    private void wordBreak(String str, int start, StringBuilder sentenceSoFar) {
         if (start == str.length()) {
-            sentences.add(currentSentence.toString());
+            sentences.add(sentenceSoFar.toString().trim());
             return;
         }
 
@@ -151,264 +120,26 @@ class Solution {
 
             String currentPrefix = prefix.toString();
             if (dictionary.contains(currentPrefix)) {
-                int currentLength = currentSentence.length();
-
-                if (currentLength != 0) {
-                    currentSentence.append(" ");
-                }
-
-                currentSentence.append(currentPrefix);
-
-                wordBreak(str, partition + 1, currentSentence);
-
-                currentSentence.setLength(currentLength);
+                int currentLength = sentenceSoFar.length();
+                sentenceSoFar.append(" ").append(currentPrefix);
+                wordBreak(str, partition + 1, sentenceSoFar);
+                sentenceSoFar.setLength(currentLength);
             }
         }
     }
-}
 
+    private void findSmallestAndLargestWordInDictionary(List<String> wordDict) {
+        int low = 0, high = wordDict.size() - 1;
 
-//Method 2
+        while (low <= high) {
+            int len1 = wordDict.get(low).length();
+            int len2 = wordDict.get(high).length();
 
-//Bruteforce Approach
+            minWordLength = Math.min(minWordLength, Math.min(len1, len2));
+            maxWordLength = Math.max(maxWordLength, Math.max(len1, len2));
 
-class Solution {
-    private Set<String> dictionary;
-
-    public List<String> wordBreak(String str, List<String> wordDict) {
-        dictionary = new HashSet<>(wordDict);
-        return wordBreak(str);
-    }
-
-    private List<String> wordBreak(String str) {
-        // Base case: If the string is empty, return a list containing an empty string
-        if (str.isEmpty()) {
-            return Collections.singletonList("");
+            low++;
+            high--;
         }
-        
-        // List to store all possible complete sentences that can be formed
-        List<String> completeSentences = new ArrayList<>();
-        StringBuilder prefix = new StringBuilder();
-        
-        // Iterate through the string to form different partitions
-        for (int partition = 0; partition < str.length(); partition++) {
-            prefix.append(str.charAt(partition));
-            
-            String currentPrefix = prefix.toString();
-
-            if (dictionary.contains(currentPrefix)) {
-                List<String> partialSentences = wordBreak(str.substring(partition + 1));
-                // Combine the current prefix with each of the partial sentences
-                for (String sentence : partialSentences) {
-                    if (sentence.isEmpty()) {
-                        // If the partial sentence is empty, just add the current prefix
-                        completeSentences.add(currentPrefix);
-                    } else {
-                        // Otherwise, add the current prefix followed by a space and the partial sentence
-                        completeSentences.add(currentPrefix + " " + sentence);
-                    }
-                }
-            }
-        }
-
-        return completeSentences;
-    }
-}
-
-
-//Improved Approach
-
-class Solution {
-    private Set<String> dictionary;
-    private int maxWordLength;
-    private int minWordLength;
-
-    public List<String> wordBreak(String str, List<String> wordDict) {
-        dictionary = new HashSet<>(wordDict);
-        maxWordLength = Integer.MIN_VALUE;
-        minWordLength = Integer.MAX_VALUE;
-
-        for (String word : wordDict) {
-            maxWordLength = Math.max(maxWordLength, word.length());
-            minWordLength = Math.min(minWordLength, word.length());
-        }
-
-        return wordBreak(str);
-    }
-
-    private List<String> wordBreak(String str) {
-        if (str.isEmpty()) {
-            return Collections.singletonList("");
-        }
-
-        List<String> completeSentences = new ArrayList<>();
-        StringBuilder prefix = new StringBuilder();
-
-        for (int partition = 0; partition < str.length(); partition++) {
-            prefix.append(str.charAt(partition));
-
-            if (prefix.length() < minWordLength) {
-                continue;
-            }
-
-            if (prefix.length() > maxWordLength) {
-                break;
-            }
-
-            String currentPrefix = prefix.toString();
-
-            if (dictionary.contains(currentPrefix)) {
-                List<String> partialSentences = wordBreak(str.substring(partition + 1));
-                for (String sentence : partialSentences) {
-                    if (sentence.isEmpty()) {
-                        completeSentences.add(currentPrefix);
-                    } else {
-                        completeSentences.add(currentPrefix + " " + sentence);
-                    }
-                }
-            }
-        }
-
-        return completeSentences;
-    }
-}
-
-
-//Better Approach
-
-class Solution {
-    private Set<String> dictionary;
-    private int maxWordLength;
-    private int minWordLength;
-
-    public List<String> wordBreak(String str, List<String> wordDict) {
-        dictionary = new HashSet<>(wordDict);
-        maxWordLength = Integer.MIN_VALUE;
-        minWordLength = Integer.MAX_VALUE;
-
-        int left = 0;
-        int right = wordDict.size() - 1;
-
-        while (left <= right) {
-            int leftWordLength = wordDict.get(left).length();
-            int rightWordLength = wordDict.get(right).length();
-
-            maxWordLength = Math.max(maxWordLength, Math.max(leftWordLength, rightWordLength));
-            minWordLength = Math.min(minWordLength, Math.min(leftWordLength, rightWordLength));
-
-            left++;
-            right--;
-        }
-
-        return wordBreak(str, 0);
-    }
-
-    private List<String> wordBreak(String str, int start) {
-        if (start == str.length()) {
-            return Collections.singletonList("");
-        }
-
-        List<String> completeSentences = new ArrayList<>();
-        StringBuilder prefix = new StringBuilder();
-
-        for (int partition = start; partition < str.length(); partition++) {
-            prefix.append(str.charAt(partition));
-
-            if (prefix.length() < minWordLength) {
-                continue;
-            }
-
-            if (prefix.length() > maxWordLength) {
-                break;
-            }
-
-            String currentPrefix = prefix.toString();
-
-            if (dictionary.contains(currentPrefix)) {
-                List<String> partialSentences = wordBreak(str, partition + 1);
-                for (String sentence : partialSentences) {
-                    if (sentence.isEmpty()) {
-                        completeSentences.add(currentPrefix);
-                    } else {
-                        completeSentences.add(currentPrefix + " " + sentence);
-                    }
-                }
-            }
-        }
-
-        return completeSentences;
-    }
-}
-
-//Optimal Approach
-
-class Solution {
-    private Set<String> dictionary;
-    private int maxWordLength;
-    private int minWordLength;
-    private Map<Integer, List<String>> cache;
-
-    public List<String> wordBreak(String str, List<String> wordDict) {
-        dictionary = new HashSet<>(wordDict);
-        maxWordLength = Integer.MIN_VALUE;
-        minWordLength = Integer.MAX_VALUE;
-        cache = new HashMap<>();
-
-        int left = 0;
-        int right = wordDict.size() - 1;
-
-        while (left <= right) {
-            int leftWordLength = wordDict.get(left).length();
-            int rightWordLength = wordDict.get(right).length();
-
-            maxWordLength = Math.max(maxWordLength, Math.max(leftWordLength, rightWordLength));
-            minWordLength = Math.min(minWordLength, Math.min(leftWordLength, rightWordLength));
-
-            left++;
-            right--;
-        }
-
-        return wordBreak(str, 0);
-    }
-
-    private List<String> wordBreak(String str, int start) {
-        if (start == str.length()) {
-            return Collections.singletonList("");
-        }
-
-        if (cache.containsKey(start)) {
-            return cache.get(start);
-        }
-
-        List<String> completeSentences = new ArrayList<>();
-        StringBuilder prefix = new StringBuilder();
-
-        for (int partition = start; partition < str.length(); partition++) {
-            prefix.append(str.charAt(partition));
-
-            if (prefix.length() < minWordLength) {
-                continue;
-            }
-
-            if (prefix.length() > maxWordLength) {
-                break;
-            }
-
-            String currentPrefix = prefix.toString();
-
-            if (dictionary.contains(currentPrefix)) {
-                List<String> partialSentences = wordBreak(str, partition + 1);
-                for (String sentence : partialSentences) {
-                    if (sentence.isEmpty()) {
-                        completeSentences.add(currentPrefix);
-                    } else {
-                        completeSentences.add(currentPrefix + " " + sentence);
-                    }
-                }
-            }
-        }
-
-        cache.put(start, completeSentences);
-        return completeSentences;
     }
 }
