@@ -67,57 +67,92 @@ There are 4P2 = 4! / (4 - 2)! = 4! / 2! = (4 × 3 × 2 × 1) / (2 × 1) = 12 per
 
 //Method 1
 
-//Brutefore Approach
+//Naive implementation
 
 class Solution {
+    // This list stores all the generated permutations
     private ArrayList<String> permutations;
 
     public ArrayList<String> permutation(String str) {
         permutations = new ArrayList<>();
+
+        // Begin generating permutations with an empty permutation so far
         findPermutations(str, new StringBuilder());
+
+        // Sorting the final list of permutations in lexicographical order
         Collections.sort(permutations);
+
         return permutations;
     }
 
     private void findPermutations(String str, StringBuilder permutation) {
+        // Base case: if the input string is empty, we have formed a complete permutation
         if (str.isEmpty()) {
+            // Add a deep copy of the current permutation to the result list
             permutations.add(permutation.toString());
             return;
         }
 
+        // Try placing each character of the remaining string at current position
         for (int i = 0; i < str.length(); i++) {
-            permutation.append(str.charAt(i));
+            // Choose the current character
+            char currentChar = str.charAt(i);
+
+            // Add it to the current permutation
+            permutation.append(currentChar);
+
+            /**
+             * Recurse with the remaining characters:
+             * - str.substring(0, i) gives all characters before index i
+             * - str.substring(i + 1) gives all characters after index i
+             * - Together they exclude the current character at index i
+             */
             findPermutations(str.substring(0, i) + str.substring(i + 1), permutation);
+
+            // Backtrack: remove the last character added before moving to next option
             permutation.setLength(permutation.length() - 1);
         }
     }
 }
 
-
-// Optimal Approach
+// Optimal implementation
 
 class Solution {
+    // This list will collect all the permutations
     private ArrayList<String> permutations;
 
     public ArrayList<String> permutation(String str) {
         permutations = new ArrayList<>();
+        // Start backtracking with empty permutation and all elements unvisited
         findPermutations(str, new StringBuilder(), new boolean[str.length()]);
-        Collections.sort(permutations);
+        Collections.sort(permutations); // Sorting the list of permutations lexicographically
         return permutations;
     }
 
-    private void findPermutations(String str, StringBuilder permutation, boolean[] visited) {
-        if (permutation.length() == str.length()) {
-            permutations.add(permutation.toString());
+    private void findPermutations(String str, StringBuilder currentPermutation, boolean[] visited) {
+        // Base case: if we have selected characters equal to array length, one full permutation is ready
+        if (currentPermutation.length() == str.length()) {
+            permutations.add(currentPermutation.toString()); // store deep copy
             return;
         }
 
+        /**
+         *  For every position in the permutation, we have the option to put any of the unused characters.
+         *  So we try each character that has not been used yet and recursively build permutations.
+         */
         for (int i = 0; i < str.length(); i++) {
             if (!visited[i]) {
+                // Mark the current element as used
                 visited[i] = true;
-                permutation.append(str.charAt(i));
-                findPermutations(str, permutation, visited);
-                permutation.setLength(permutation.length() - 1);
+
+                // Add the current element to the currentPermutation
+                currentPermutation.append(str.charAt(i));
+
+                // Recur to place next element
+                findPermutations(str, currentPermutation, visited);
+
+                // Backtrack: remove the element and mark it as unused again
+                currentPermutation.setLength(currentPermutation.length() - 1);
                 visited[i] = false;
             }
         }
@@ -125,32 +160,73 @@ class Solution {
 }
 
 
-
 //Method 2
+
+/*
+[a, b, c]  (index = 0)
+|
+|-- swap(0,0) -> [a, b, c]
+|   |
+|   |-- swap(1,1) -> [a, b, c]
+|   |   |
+|   |   |-- swap(2,2) -> [a, b, c] ✅
+|   |
+|   |-- swap(1,2) -> [a, c, b]
+|       |
+|       |-- swap(2,2) -> [a, c, b] ✅
+|
+|-- swap(0,1) -> [b, a, c]
+|   |
+|   |-- swap(1,1) -> [b, a, c]
+|   |   |
+|   |   |-- swap(2,2) -> [b, a, c] ✅
+|   |
+|   |-- swap(1,2) -> [b, c, a]
+|       |
+|       |-- swap(2,2) -> [b, c, a] ✅
+|
+|-- swap(0,2) -> [c, b, a]
+    |
+    |-- swap(1,1) -> [c, b, a]
+    |   |
+    |   |-- swap(2,2) -> [c, b, a] ✅
+    |
+    |-- swap(1,2) -> [c, a, b]
+        |
+        |-- swap(2,2) -> [c, a, b] ✅
+*/
+
 
 class Solution {
     private ArrayList<String> permutations;
 
     public ArrayList<String> permutation(String str) {
         permutations = new ArrayList<>();
-        findPermutations(str.toCharArray(), 0);
-        Collections.sort(permutations);
+        findPermutations(str.toCharArray(), 0); // Start generating permutations from index 0
+        Collections.sort(permutations); // Sorting the list of permutations lexicographically
         return permutations;
     }
 
     private void findPermutations(char[] arr, int index) {
+        // Base case: if the current index reaches the end, we have a complete permutation
         if (index == arr.length) {
-            permutations.add(new String(arr));
+            permutations.add(new String(arr)); // Add the current permutation to the result list
             return;
         }
 
+        /* 
+           Swap the value at current index with each character (starting from itself) 
+           present at subsequent indexes and afterwards fix the current index 
+           and perform the same for the upcoming indexes
+        */
         for (int i = index; i < arr.length; i++) {
-            swap(arr, index, i);
-            findPermutations(arr, index + 1);
-            swap(arr, index, i);
+            swap(arr, index, i); // Swap current character with the i-th element
+            findPermutations(arr, index + 1); // Fix this index and move to the next index
+            swap(arr, index, i); // Backtrack: undo the swap to restore the original state
         }
     }
 
+    // Utility method to swap elements at index i and j
     private void swap(char[] arr, int i, int j) {
         char temp = arr[i];
         arr[i] = arr[j];
