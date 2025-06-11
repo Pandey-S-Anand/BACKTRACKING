@@ -1,31 +1,82 @@
 //Bruteforce Approach
 
 class Solution {
-    private List<List<String>> allPartitions;
+    // List to store all valid palindrome partitions
+    private List<List<String>> partitions;
 
     public List<List<String>> partition(String str) {
-        allPartitions = new ArrayList<>();
+        partitions = new ArrayList<>();
         partitionHelper(str, new ArrayList<>());
-        return allPartitions;
+        return partitions;
     }
 
-    private void partitionHelper(String str, List<String> currentPartitions) {
+    private void partitionHelper(String str, List<String> partition) {
+        // Base case: if the entire string has been consumed, store the current partition
         if (str.isEmpty()) {
-            allPartitions.add(new ArrayList<>(currentPartitions));
+            partitions.add(new ArrayList<>(partition)); // Add a deep copy to avoid mutation
             return;
         }
 
+        // Try every prefix of the string and recursively partition the rest if it's a palindrome
         for (int i = 0; i < str.length(); i++) {
+            // Check if the prefix str[0..i] is a palindrome
             if (isPalindrome(str, 0, i)) {
-                currentPartitions.add(str.substring(0, i + 1));
-                partitionHelper(str.substring(i + 1), currentPartitions);
-                currentPartitions.remove(currentPartitions.size() - 1);
+                // Include the palindrome prefix in the current partition
+                partition.add(str.substring(0, i + 1));
+                // Recurse on the remaining suffix str[i+1..end]
+                partitionHelper(str.substring(i + 1), partition);
+                // Backtrack: remove the last added substring to explore other options
+                partition.remove(partition.size() - 1);
             }
         }
     }
 
     private boolean isPalindrome(String str, int i, int j) {
-        if (i >= j) {
+        // Base case: if all characters have been checked (i > j), it's a valid palindrome
+        if (i > j) {
+            return true;
+        }
+
+        // If mismatch found, it's not a palindrome
+        if (str.charAt(i) != str.charAt(j)) {
+            return false;
+        }
+
+        // Recur to check the inner substring
+        return isPalindrome(str, i + 1, j - 1);
+    }
+}
+
+
+
+//Better Approach
+
+class Solution {
+    private List<List<String>> partitions;
+
+    public List<List<String>> partition(String str) {
+        partitions = new ArrayList<>();
+        partitionHelper(str, 0, new ArrayList<>());
+        return partitions;
+    }
+
+    private void partitionHelper(String str, int start, List<String> partition) {
+        if (start == str.length()) {
+            partitions.add(new ArrayList<>(partition));
+            return;
+        }
+
+        for (int i = start; i < str.length(); i++) {
+            if (isPalindrome(str, start, i)) {
+                partition.add(str.substring(start, i + 1));
+                partitionHelper(str, i + 1, partition);
+                partition.remove(partition.size() - 1);
+            }
+        }
+    }
+
+    private boolean isPalindrome(String str, int i, int j) {
+        if (i > j) {
             return true;
         }
 
@@ -38,92 +89,36 @@ class Solution {
 }
 
 
-//Better Approach
-
-class Solution {
-    private List<List<String>> allPartitions;
-    private int[][] cache;
-
-    public List<List<String>> partition(String str) {
-        allPartitions = new ArrayList<>();
-        cache = new int[str.length()][str.length()];
-        intializeCache();
-        partitionHelper(str, 0, new ArrayList<>(str.length()));
-        return allPartitions;
-    }
-
-    private void partitionHelper(String str, int start, List<String> currentPartitions) {
-        if (start == str.length()) {
-            allPartitions.add(new ArrayList<>(currentPartitions));
-            return;
-        }
-
-        for (int i = start; i < str.length(); i++) {
-            if (isPalindrome(str, start, i)) {
-                currentPartitions.add(str.substring(start, i + 1));
-                partitionHelper(str, i + 1, currentPartitions);
-                currentPartitions.remove(currentPartitions.size() - 1);
-            }
-        }
-    }
-
-    private boolean isPalindrome(String str, int i, int j) {
-        if (i >= j) {
-            return true;
-        }
-
-        if (cache[i][j] != -1) {
-            return cache[i][j] == 1;
-        }
-
-        if (str.charAt(i) != str.charAt(j)) {
-            cache[i][j] = 0;
-            return false;
-        }
-
-        cache[i][j] = isPalindrome(str, i + 1, j - 1) ? 1 : 0;
-
-        return cache[i][j] == 1;
-    }
-
-    private void intializeCache() {
-        for (int i = 0; i < cache.length; i++) {
-            Arrays.fill(cache[i], -1);
-        }
-    }
-}
-
-
 //Optimal Approach
 
 class Solution {
+    private List<List<String>> partitions;
     private boolean[][] dp;
-    private List<List<String>> allPartitions;
 
     public List<List<String>> partition(String str) {
-        allPartitions = new ArrayList<>();
-        dp = precomputePalindromeSubstrings(str);
-        partitionHelper(str, 0, new ArrayList<>(str.length()));
-        return allPartitions;
+        partitions = new ArrayList<>();
+        precomputePalindromeSubstrings(str);
+        partitionHelper(str, 0, new ArrayList<>());
+        return partitions;
     }
 
-    private void partitionHelper(String str, int start, List<String> currentPartitions) {
+    private void partitionHelper(String str, int start, List<String> partition) {
         if (start == str.length()) {
-            allPartitions.add(new ArrayList<>(currentPartitions));
+            partitions.add(new ArrayList<>(partition));
             return;
         }
 
         for (int i = start; i < str.length(); i++) {
             if (dp[start][i]) {
-                currentPartitions.add(str.substring(start, i + 1));
-                partitionHelper(str, i + 1, currentPartitions);
-                currentPartitions.remove(currentPartitions.size() - 1);
+                partition.add(str.substring(start, i + 1));
+                partitionHelper(str, i + 1, partition);
+                partition.remove(partition.size() - 1);
             }
         }
     }
 
-    private boolean[][] precomputePalindromeSubstrings(String str) {
-        boolean[][] dp = new boolean[str.length()][str.length()];
+    private void precomputePalindromeSubstrings(String str) {
+        dp = new boolean[str.length()][str.length()];
 
         for (int gap = 0; gap < str.length(); gap++) {
             for (int i = 0, j = gap; j < str.length(); i++, j++) {
@@ -136,7 +131,5 @@ class Solution {
                 }
             }
         }
-
-        return dp;
     }
 }
