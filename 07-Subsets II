@@ -36,56 +36,57 @@ Ex: arr[]= [4,4,4,1,4]
 
 //Method 1
 
-//Naive Implementation 
+//Naive implementation
 
 class Solution {
     public List<List<Integer>> subsetsWithDup(int[] arr) {
-        Set<List<Integer>> subsets = new HashSet<>();
+        // This list will store all generated subsets, including possible duplicates
+        List<List<Integer>> subsets = new ArrayList<>();
         subsets.add(new ArrayList<>());
-        List<List<Integer>> tempList = new ArrayList<>();
 
         for (int i = 0; i < arr.length; i++) {
-            for (List<Integer> subset : subsets) {
-                List<Integer> newSubset = new ArrayList<>(subset);
+            int existingSubsetsCount = subsets.size();
+
+            for (int j = 0; j < existingSubsetsCount; j++) {
+                List<Integer> newSubset = new ArrayList<>(subsets.get(j));
                 newSubset.add(arr[i]);
 
+                // Sort the subset so that duplicate sets like [1,2] and [2,1] become identical
                 Collections.sort(newSubset);
-                tempList.add(newSubset);
+                subsets.add(newSubset);
             }
-            subsets.addAll(tempList);
-            tempList.clear();
         }
 
-        return new ArrayList<>(subsets);
+        // Convert the list to a Set to remove duplicate subsets, then convert back to a List
+        return new ArrayList<>(new HashSet<>(subsets));
     }
 }
 
 
-//Optimal Implementation
+//Optimal implementation
 
 class Solution {
     public List<List<Integer>> subsetsWithDup(int[] arr) {
-        Set<List<Integer>> subsets = new HashSet<>();
-        subsets.add(new ArrayList<>());
-        List<List<Integer>> tempList = new ArrayList<>();
-
-        // If array is sorted,the generated subsets will also be in sorted order
+        // Sort the input array so that duplicates are adjacent This also ensures subsets like [1,2] and [2,1] will always be added in a consistent order (i.e., [1,2])
         Arrays.sort(arr);
+        List<List<Integer>> subsets = new ArrayList<>();
+        subsets.add(new ArrayList<>());
 
         for (int i = 0; i < arr.length; i++) {
-            for (List<Integer> subset : subsets) {
-                List<Integer> newSubset = new ArrayList<>(subset);
-                newSubset.add(arr[i]);
+            int existingSubsetsCount = subsets.size();
 
-                tempList.add(newSubset);
+            for (int j = 0; j < existingSubsetsCount; j++) {
+                List<Integer> newSubset = new ArrayList<>(subsets.get(j));
+                newSubset.add(arr[i]);
+                subsets.add(newSubset);
             }
-            subsets.addAll(tempList);
-            tempList.clear();
         }
 
-        return new ArrayList<>(subsets);
+        // Use HashSet to remove duplicate subsets caused by duplicate elements in the input
+        return new ArrayList<>(new HashSet<>(subsets));
     }
 }
+
 
 
 //Method 2 (Using Bit Manipulation)
@@ -95,23 +96,24 @@ class Solution {
 class Solution {
     public List<List<Integer>> subsetsWithDup(int[] arr) {
         Set<List<Integer>> uniqueSubsets = new HashSet<>();
-        List<Integer> currentSubset = new ArrayList<>();
         int totalSubsets = 1 << arr.length;
 
         for (int num = 0; num < totalSubsets; num++) {
+            List<Integer> subset = new ArrayList<>();
             for (int i = 0; i < arr.length; i++) {
                 if ((num & (1 << i)) != 0) {
-                    currentSubset.add(arr[i]);
+                    subset.add(arr[i]);
                 }
             }
 
-            List<Integer> newSubset = new ArrayList<>(currentSubset);
+            // Sort the subset so that duplicate sets like [1,2] and [2,1] become identical
+            List<Integer> newSubset = new ArrayList<>(subset);
             Collections.sort(newSubset);
 
             uniqueSubsets.add(newSubset);
-            currentSubset.clear();
         }
 
+        // Use a HashSet to remove duplicate subsets caused by duplicate elements in the input
         return new ArrayList<>(uniqueSubsets);
     }
 }
@@ -121,25 +123,26 @@ class Solution {
 
 class Solution {
     public List<List<Integer>> subsetsWithDup(int[] arr) {
-        Set<List<Integer>> uniqueSubsets = new HashSet<>();
-        List<Integer> currentSubset = new ArrayList<>();
-        int totalSubsets = 1 << arr.length;
+        // Sort the input array so that duplicates are adjacent This also ensures subsets like [1,2] and [2,1] will always be added in a consistent order (i.e., [1,2])
         Arrays.sort(arr);
+        Set<List<Integer>> uniqueSubsets = new HashSet<>();
+        int totalSubsets = 1 << arr.length;
 
         for (int num = 0; num < totalSubsets; num++) {
+            List<Integer> subset = new ArrayList<>();
             for (int i = 0; i < arr.length; i++) {
                 if ((num & (1 << i)) != 0) {
-                    currentSubset.add(arr[i]);
+                    subset.add(arr[i]);
                 }
             }
 
-            uniqueSubsets.add(new ArrayList<>(currentSubset));
-            currentSubset.clear();
+            uniqueSubsets.add(new ArrayList<>(subset));
         }
 
         return new ArrayList<>(uniqueSubsets);
     }
 }
+
 
 
 //Recursive Approach
@@ -160,6 +163,7 @@ class Solution {
     private void generateUniqueSubsets(int[] arr, int index, List<Integer> currentSubset) {
         if (index == arr.length) {
             List<Integer> newSubset = new ArrayList<>(currentSubset);
+            // Sort the subset so that duplicate sets like [1,2] and [2,1] become identical
             Collections.sort(newSubset);
             uniqueSubsets.add(newSubset);
             return;
@@ -253,6 +257,7 @@ class Solution {
 
     public List<List<Integer>> subsetsWithDup(int[] arr) {
         uniqueSubsets = new HashSet<>();
+        // Sort the input array so that duplicates are adjacent This also ensures subsets like [1,2] and [2,1] will always be added in a consistent order (i.e., [1,2])
         Arrays.sort(arr);
         generateUniqueSubsets(arr, 0, new ArrayList<>());
         return new ArrayList<>(uniqueSubsets);
@@ -270,7 +275,6 @@ class Solution {
         generateUniqueSubsets(arr, index + 1, currentSubset);
     }
 }
-
 
 /*
 Given Array : [1, 2, 3, 2]
@@ -332,28 +336,42 @@ sorted array : {1, 2, 2, 3}
 //Optimal Implementation
 
 class Solution {
+    // This list will hold all the unique subsets generated
     private List<List<Integer>> uniqueSubsets;
 
     public List<List<Integer>> subsetsWithDup(int[] arr) {
         uniqueSubsets = new ArrayList<>();
+
+        // Sort the array so that duplicates come together
         Arrays.sort(arr);
+
+        // Start recursive generation of subsets
         generateUniqueSubsets(arr, 0, new ArrayList<>());
         return uniqueSubsets;
     }
 
     private void generateUniqueSubsets(int[] arr, int index, List<Integer> currentSubset) {
+        // Base case: if we've considered all elements, add current subset to result
         if (index == arr.length) {
             uniqueSubsets.add(new ArrayList<>(currentSubset));
             return;
         }
 
+        // Include the current element in the subset
         currentSubset.add(arr[index]);
         generateUniqueSubsets(arr, index + 1, currentSubset);
+
+        // Backtrack: remove the last added element
         currentSubset.remove(currentSubset.size() - 1);
-        while (index < arr.length - 1 && arr[index] == arr[index + 1]) {
-            index++;
+
+        // Skip all duplicates of the current element Move idx to the next index with a different value than arr[index]
+        int nextDistinctIndex = index + 1;
+        while (nextDistinctIndex < arr.length && arr[index] == arr[nextDistinctIndex]) {
+            nextDistinctIndex++;
         }
-        generateUniqueSubsets(arr, index + 1, currentSubset);
+
+        // Exclude current element and all its duplicates, and move forward
+        generateUniqueSubsets(arr, nextDistinctIndex, currentSubset);
     }
 }
 
@@ -373,6 +391,7 @@ class Solution {
 
     private void generateUniqueSubsets(int[] arr, int index, List<Integer> currentSubset) {
         List<Integer> newSubset = new ArrayList<>(currentSubset);
+        // Sort the subset so that duplicate sets like [1,2] and [2,1] become identical
         Collections.sort(newSubset);
         uniqueSubsets.add(new ArrayList<>(newSubset));
 
@@ -392,6 +411,7 @@ class Solution {
 
     public List<List<Integer>> subsetsWithDup(int[] arr) {
         uniqueSubsets = new HashSet<>();
+        // Sort the input array so that duplicates are adjacent This also ensures subsets like [1,2] and [2,1] will always be added in a consistent order (i.e., [1,2])
         Arrays.sort(arr);
         generateUniqueSubsets(arr, 0, new ArrayList<>());
         return new ArrayList<>(uniqueSubsets);
@@ -416,6 +436,7 @@ class Solution {
 
     public List<List<Integer>> subsetsWithDup(int[] arr) {
         uniqueSubsets = new ArrayList<>();
+        // Sort the array so that duplicates come together
         Arrays.sort(arr);
         generateUniqueSubsets(arr, 0, new ArrayList<>());
         return uniqueSubsets;
@@ -424,7 +445,9 @@ class Solution {
     private void generateUniqueSubsets(int[] arr, int index, List<Integer> currentSubset) {
         uniqueSubsets.add(new ArrayList<>(currentSubset));
 
+        // To keep track of elements used at the current level of recursion
         Set<Integer> used = new HashSet<>();
+
         for (int i = index; i < arr.length; i++) {
             // Skip duplicates
             if (used.contains(arr[i])) {
@@ -445,6 +468,7 @@ class Solution {
 
     public List<List<Integer>> subsetsWithDup(int[] arr) {
         uniqueSubsets = new ArrayList<>();
+        // Sort the array so that duplicates come together
         Arrays.sort(arr);
         generateUniqueSubsets(arr, 0, new ArrayList<>());
         return uniqueSubsets;
@@ -454,6 +478,7 @@ class Solution {
         uniqueSubsets.add(new ArrayList<>(currentSubset));
 
         for (int i = index; i < arr.length; i++) {
+            // Skip duplicate elements at the same recursive level
             if (i > index && arr[i] == arr[i - 1]) {
                 continue;
             }
