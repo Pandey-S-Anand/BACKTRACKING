@@ -1,32 +1,36 @@
-//Recursive Approach
-
 //Method 1
 
 class Solution {
-    private List<List<Integer>> targetSumcombinations;
+    private List<List<Integer>> targetSumCombinations;
 
     public List<List<Integer>> combinationSum(int[] arr, int targetSum) {
-        targetSumcombinations = new ArrayList<>();
+        targetSumCombinations = new ArrayList<>();
         findCombinationsWithSumk(arr, 0, targetSum, new ArrayList<>());
-        return targetSumcombinations;
+        return targetSumCombinations;
     }
 
-    private void findCombinationsWithSumk(int[] arr, int index, int targetSum, List<Integer> currentCombination) {
+    private void findCombinationsWithSumk(int[] arr, int index, int targetSum, List<Integer> combination) {
+        // Base case: If targetSum becomes 0, we found a valid combination
         if (targetSum == 0) {
-            targetSumcombinations.add(new ArrayList<>(currentCombination));
+            targetSumCombinations.add(new ArrayList<>(combination));
             return;
         }
 
+        // If index exceeds array length, we can't form further combinations
         if (index == arr.length) {
             return;
         }
 
-        currentCombination.add(arr[index]);
+        // Include the current element if it's not larger than remaining targetSum
         if (targetSum >= arr[index]) {
-            findCombinationsWithSumk(arr, index, targetSum - arr[index], currentCombination);
+            combination.add(arr[index]);
+            // Stay at same index since elements can be reused (unlimited times)
+            findCombinationsWithSumk(arr, index, targetSum - arr[index], combination);
+            // Backtrack by removing last element added
+            combination.remove(combination.size() - 1);
         }
-        currentCombination.remove(currentCombination.size() - 1);
-        findCombinationsWithSumk(arr, index + 1, targetSum, currentCombination);
+
+        findCombinationsWithSumk(arr, index + 1, targetSum, combination);
     }
 }
 
@@ -34,26 +38,30 @@ class Solution {
 //Method 2
 
 class Solution {
-    private List<List<Integer>> targetSumcombinations;
+    private List<List<Integer>> targetSumCombinations;
 
     public List<List<Integer>> combinationSum(int[] arr, int targetSum) {
-        targetSumcombinations = new ArrayList<>();
+        targetSumCombinations = new ArrayList<>();
         findCombinationsWithSumk(arr, 0, targetSum, new ArrayList<>());
-        return targetSumcombinations;
+        return targetSumCombinations;
     }
 
-    private void findCombinationsWithSumk(int[] arr, int index, int targetSum, List<Integer> currentCombination) {
+    private void findCombinationsWithSumk(int[] arr, int index, int targetSum, List<Integer> combination) {
+        // Base case: If targetSum becomes 0, we found a valid combination
         if (targetSum == 0) {
-            targetSumcombinations.add(new ArrayList<>(currentCombination));
+            targetSumCombinations.add(new ArrayList<>(combination));
             return;
         }
 
         for (int i = index; i < arr.length; i++) {
-            currentCombination.add(arr[i]);
+            // Include the current element if it's not larger than remaining targetSum
             if (targetSum >= arr[i]) {
-                findCombinationsWithSumk(arr, i, targetSum - arr[i], currentCombination);
+                combination.add(arr[i]);
+                // Stay at same index since elements can be reused (unlimited times)
+                findCombinationsWithSumk(arr, i, targetSum - arr[i], combination);
+                // Backtrack by removing last element added
+                combination.remove(combination.size() - 1);
             }
-            currentCombination.remove(currentCombination.size() - 1);
         }
     }
 }
