@@ -70,25 +70,39 @@ There are 4P2 = 4! / (4 - 2)! = 4! / 2! = (4 × 3 × 2 × 1) / (2 × 1) = 12 per
 // Method 1
 
 class Solution {
+    // This list will collect all the permutations
     private List<List<Integer>> permutations;
 
     public List<List<Integer>> permute(int[] arr) {
         permutations = new ArrayList<>();
+        // Start backtracking with empty permutation and all elements unvisited
         findPermutations(arr, new ArrayList<>(), new boolean[arr.length]);
         return permutations;
     }
 
     private void findPermutations(int[] arr, List<Integer> currentPermutation, boolean[] visited) {
+        // Base case: if we have selected numbers equal to array length, one full permutation is ready
         if (currentPermutation.size() == arr.length) {
-            permutations.add(new ArrayList<>(currentPermutation));
+            permutations.add(new ArrayList<>(currentPermutation)); // store deep copy
             return;
         }
 
+        /**
+         *  For every position in the permutation, we have the option to put any of the unused numbers.
+         *  So we try each number that has not been used yet and recursively build permutations.
+         */
         for (int i = 0; i < arr.length; i++) {
             if (!visited[i]) {
+                // Mark the current element as used
                 visited[i] = true;
+
+                // Add the current element to the currentPermutation
                 currentPermutation.add(arr[i]);
+
+                // Recur to place next element
                 findPermutations(arr, currentPermutation, visited);
+
+                // Backtrack: remove the element and mark it as unused again
                 currentPermutation.remove(currentPermutation.size() - 1);
                 visited[i] = false;
             }
@@ -98,34 +112,73 @@ class Solution {
 
 
 //Method 2
+/*
+
+[1, 2, 3]  (index = 0)
+|
+|-- swap(0,0) -> [1, 2, 3]
+|   |
+|   |-- swap(1,1) -> [1, 2, 3]
+|   |   |
+|   |   |-- swap(2,2) -> [1, 2, 3] ✅
+|   |
+|   |-- swap(1,2) -> [1, 3, 2]
+|       |
+|       |-- swap(2,2) -> [1, 3, 2] ✅
+|
+|-- swap(0,1) -> [2, 1, 3]
+|   |
+|   |-- swap(1,1) -> [2, 1, 3]
+|   |   |
+|   |   |-- swap(2,2) -> [2, 1, 3] ✅
+|   |
+|   |-- swap(1,2) -> [2, 3, 1]
+|       |
+|       |-- swap(2,2) -> [2, 3, 1] ✅
+|
+|-- swap(0,2) -> [3, 2, 1]
+    |
+    |-- swap(1,1) -> [3, 2, 1]
+    |   |
+    |   |-- swap(2,2) -> [3, 2, 1] ✅
+    |
+    |-- swap(1,2) -> [3, 1, 2]
+        |
+        |-- swap(2,2) -> [3, 1, 2] ✅
+
+*/
 
 class Solution {
     private List<List<Integer>> permutations;
 
     public List<List<Integer>> permute(int[] arr) {
         permutations = new ArrayList<>();
-        findPermutations(arr, 0);
+        findPermutations(arr, 0); // Start generating permutations from index 0
         return permutations;
     }
 
     private void findPermutations(int[] arr, int index) {
+        // Base case: if the current index reaches the end, we have a complete permutation
         if (index == arr.length) {
-            List<Integer> currentPermutation = new ArrayList<>();
-            for (int num : arr) {
-                currentPermutation.add(num);
-            }
-            permutations.add(currentPermutation);
+            List<Integer> permutation = Arrays.stream(arr).boxed().collect(Collectors.toList());
+            permutations.add(permutation); // Add the current permutation to the result list
             return;
         }
 
+        /* 
+           Swap the value at current index with each value (starting from itself) 
+           present at subsequent indexes and afterwards fix the current index 
+           and perform the same for the upcoming indexes
+        */
         for (int i = index; i < arr.length; i++) {
-            swap(arr, index, i);
-            findPermutations(arr, index + 1);
-            swap(arr, index, i);
+            swap(arr, index, i); // Swap current element with the i-th element
+            findPermutations(arr, index + 1); // Fix this index and move to the next index
+            swap(arr, index, i); // Backtrack: undo the swap to restore the original state
         }
     }
 
     private void swap(int[] arr, int i, int j) {
+        // Utility method to swap elements at index i and j
         int temp = arr[i];
         arr[i] = arr[j];
         arr[j] = temp;
