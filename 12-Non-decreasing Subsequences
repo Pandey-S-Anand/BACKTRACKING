@@ -1,35 +1,41 @@
 //Bruteforce Approach
 
 class Solution {
+    private Set<List<Integer>> increasingSubsequences;
+
     public List<List<Integer>> findSubsequences(int[] arr) {
-        List<List<Integer>> uniqueSubsequences = generateUniqueSubsequences(arr);
-        List<List<Integer>> uniqueNonDecreasingSubsequences = new ArrayList<>();
-
-        for (List<Integer> subsequence : uniqueSubsequences) {
-            if (isNonDecreasingSubsequence(subsequence)) {
-                uniqueNonDecreasingSubsequences.add(subsequence);
-            }
-        }
-
-        return uniqueNonDecreasingSubsequences;
+        increasingSubsequences = new HashSet<>();
+        generateUniqueSubsequences(arr, 0, new ArrayList<>());
+        return new ArrayList<>(increasingSubsequences);
     }
 
-    private List<List<Integer>> generateUniqueSubsequences(int[] arr) {
-        List<List<Integer>> uniqueSubsequences = new ArrayList<>();
-        uniqueSubsequences.add(new ArrayList<>()); // Start with the empty subsequence
-
-        for (int val : arr) {
-            int size = uniqueSubsequences.size();
-            for (int i = 0; i < size; i++) {
-                List<Integer> subsequence = new ArrayList<>(uniqueSubsequences.get(i));
-                subsequence.add(val);
-                if (!uniqueSubsequences.contains(subsequence)) {
-                    uniqueSubsequences.add(subsequence);
-                }
-            }
+    private void generateUniqueSubsequences(int[] arr, int index, List<Integer> subsequence) {
+        if (isNonDecreasingSubsequence(subsequence)) {
+            /*
+            * Why duplicates do not occur here and why we are safe with Set<List<Integer>>:
+            *
+            * - In Java, two lists like [1, 4] and [4, 1] are considered different in a HashSet,
+            *   because List equality is order-sensitive.
+            *     Example:
+            *     List.of(1, 4).equals(List.of(4, 1)) → false
+            *
+            * - If we were generating all possible subsequences and simply relying on a Set
+            *   to eliminate duplicates, then both [1, 4] and [4, 1] would be added as different entries.
+            *   This would lead to incorrect results if we wanted only *non-decreasing* subsequences.
+            *
+            * - However, in this solution we explicitly filter and add only those subsequences
+            *   that satisfy the `isNonDecreasingSubsequence()` check before inserting into the set.
+            *     - That means subsequences like [4, 1] are never added in the first place,
+            *       since 4 > 1 violates the non-decreasing rule.
+            */
+            increasingSubsequences.add(new ArrayList<>(subsequence));
         }
 
-        return uniqueSubsequences;
+        for (int i = index; i < arr.length; i++) {
+            subsequence.add(arr[i]);
+            generateUniqueSubsequences(arr, i + 1, subsequence);
+            subsequence.remove(subsequence.size() - 1);
+        }
     }
 
     private boolean isNonDecreasingSubsequence(List<Integer> subsequence) {
@@ -48,49 +54,7 @@ class Solution {
 }
 
 
-//Improved Approach
-
-class Solution {
-    public List<List<Integer>> findSubsequences(int[] arr) {
-        Set<List<Integer>> uniqueNonDecreasingSubsequences = new HashSet<>();
-        List<Integer> currentSubsequence = new ArrayList<>();
-        int totalSubsequences = 1 << arr.length;
-
-        for (int num = 0; num < totalSubsequences; num++) {
-            for (int i = 0; i < arr.length; i++) {
-                if ((num & (1 << i)) != 0) {
-                    currentSubsequence.add(arr[i]);
-                }
-            }
-
-            if (isNonDecreasingSubsequence(currentSubsequence)) {
-                uniqueNonDecreasingSubsequences.add(new ArrayList<>(currentSubsequence));
-            }
-            currentSubsequence.clear();
-        }
-
-        return new ArrayList<>(uniqueNonDecreasingSubsequences);
-    }
-
-    private boolean isNonDecreasingSubsequence(List<Integer> subsequence) {
-        if (subsequence.size() <= 1) {
-            return false;
-        }
-
-        for (int i = 1; i < subsequence.size(); i++) {
-            if (subsequence.get(i - 1) > subsequence.get(i)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-}
-
-
-//Better Approach
-
-//Recursive Tree
+//Optimal Approach
 
 []
 ├── Include 4: [4]
@@ -124,7 +88,11 @@ class Solution {
             ├── Include 7: [7]
             └── Exclude 7: []
 
+
+//Intuitive implementation
+
 class Solution {
+    // Stores all valid non-decreasing subsequences of length >= 2
     Set<List<Integer>> increasingSubsequences;
 
     public List<List<Integer>> findSubsequences(int[] arr) {
@@ -133,26 +101,40 @@ class Solution {
         return new ArrayList<>(increasingSubsequences);
     }
 
-    private void generateIncreasingSubsequences(int[] arr, int index, int lastIncludedIndex, List<Integer> currentSubsequence) {
+    private void generateIncreasingSubsequences(int[] arr, int index, int lastIncludedIndex, List<Integer> subsequence) {
+        // Base Case: Reached end of the array
         if (index == arr.length) {
-            if (currentSubsequence.size() >1) {
-                increasingSubsequences.add(new ArrayList<>(currentSubsequence));
+            if (subsequence.size() > 1) {
+                // Only consider subsequences of size >= 2
+                increasingSubsequences.add(new ArrayList<>(subsequence));
             }
             return;
         }
 
+        /*
+         * Decision 1: Include the current element if:
+         *
+         * - No element has been included yet (lastIncludedIndex == -1):
+         *     → This allows every number in the array to get a chance
+         *       to be the starting element of a new non-decreasing subsequence.
+         *
+         * - OR the current element is >= the last included element:
+         *     → This ensures the subsequence remains non-decreasing.
+         */
         if (lastIncludedIndex == -1 || arr[lastIncludedIndex] <= arr[index]) {
-            currentSubsequence.add(arr[index]);
-            generateIncreasingSubsequences(arr, index + 1, index, currentSubsequence);
-            currentSubsequence.remove(currentSubsequence.size() - 1);
+            subsequence.add(arr[index]);
+            generateIncreasingSubsequences(arr, index + 1, index, subsequence);
+            subsequence.remove(subsequence.size() - 1); // Backtrack
         }
 
-        generateIncreasingSubsequences(arr, index + 1, lastIncludedIndex, currentSubsequence);
+        
+        // Exclude the current element and move to the next index. This ensures all combinations are explored.
+        generateIncreasingSubsequences(arr, index + 1, lastIncludedIndex, subsequence);
     }
 }
 
 
-//Optimal Approach
+//Optimal implementation
 //Logic : The duplication occurs when we exclude an element while the last included element is the same as the current element.
 
 class Solution {
@@ -164,22 +146,22 @@ class Solution {
         return new ArrayList<>(increasingSubsequences);
     }
 
-    private void generateIncreasingSubsequences(int[] arr, int index, int lastIncludedIndex, List<Integer> currentSubsequence) {
+    private void generateIncreasingSubsequences(int[] arr, int index, int lastIncludedIndex, List<Integer> subsequence) {
         if (index == arr.length) {
-            if (currentSubsequence.size() >1) {
-                increasingSubsequences.add(new ArrayList<>(currentSubsequence));
+            if (subsequence.size() > 1) {
+                increasingSubsequences.add(new ArrayList<>(subsequence));
             }
             return;
         }
 
         if (lastIncludedIndex == -1 || arr[lastIncludedIndex] <= arr[index]) {
-            currentSubsequence.add(arr[index]);
-            generateIncreasingSubsequences(arr, index + 1, index, currentSubsequence);
-            currentSubsequence.remove(currentSubsequence.size() - 1);
+            subsequence.add(arr[index]);
+            generateIncreasingSubsequences(arr, index + 1, index, subsequence);
+            subsequence.remove(subsequence.size() - 1);
         }
 
-        if (lastIncludedIndex == -1 || arr[lastIncludedIndex] != arr[index]) { 
-           generateIncreasingSubsequences(arr, index + 1, lastIncludedIndex, currentSubsequence);
+        if (lastIncludedIndex == -1 || arr[lastIncludedIndex] != arr[index]) {
+            generateIncreasingSubsequences(arr, index + 1, lastIncludedIndex, subsequence);
         }
     }
 }
