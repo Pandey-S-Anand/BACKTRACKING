@@ -1,197 +1,96 @@
-//Iterative Approach
-
 //Method 1
 
-//Naive Implementation
-
 class Solution {
-    public List<List<Integer>> combinationSum3(int k, int n) {
-        return generateKSizeTargetSumSubsets(k, n);
-    }
-
-    private List<List<Integer>> generateKSizeTargetSumSubsets(int k, int targetSum) {
-        List<List<Integer>> sizeKTargetSumSubsets = new ArrayList<>();
-        List<List<Integer>> subsets = new ArrayList<>();
-        subsets.add(new ArrayList<>());
-
-        for (int num = 1; num <= 9; num++) {
-            int size = subsets.size();
-            for (int i = 0; i < size; i++) {
-                List<Integer> currentSubset = new ArrayList<>(subsets.get(i));
-                currentSubset.add(num);
-
-                if (currentSubset.size() == k && findSubsetSum(currentSubset) == targetSum) {
-                    sizeKTargetSumSubsets.add(currentSubset);
-                }
-
-                if (currentSubset.size() < k) {
-                    subsets.add(currentSubset);
-                }
-            }
-        }
-
-        return sizeKTargetSumSubsets;
-    }
-
-    private int findSubsetSum(List<Integer> subset) {
-        int subsetSum = 0;
-        for (int val : subset) {
-            subsetSum += val;
-        }
-
-        return subsetSum;
-    }
-}
-
-
-//Optimal Implementation
-
-class Solution {
-    public List<List<Integer>> combinationSum3(int k, int n) {
-        return generateKSizeTargetSumSubsets(k, n);
-    }
-
-    private List<List<Integer>> generateKSizeTargetSumSubsets(int k, int targetSum) {
-        Map<List<Integer>, Integer> subsetsAndSumMap = new HashMap<>();
-        List<List<Integer>> targetSumKSizeSubsets = new ArrayList<>();
-        subsetsAndSumMap.put(new ArrayList<>(), 0);
-
-        for (int num = 1; num <= 9; num++) {
-            List<Map.Entry<List<Integer>, Integer>> existingSubsetsAndSum = new ArrayList<>(subsetsAndSumMap.entrySet());
-
-            for (Map.Entry<List<Integer>, Integer> existingSubsetAndSum : existingSubsetsAndSum) {
-                int currentSubsetSize = existingSubsetAndSum.getKey().size() + 1;
-                int currentSubsetSum = existingSubsetAndSum.getValue() + num;
-
-                if (currentSubsetSize <= k) {
-                    List<Integer> currentSubset = new ArrayList<>(existingSubsetAndSum.getKey());
-                    currentSubset.add(num);
-
-                    if ((currentSubsetSize == k) && (currentSubsetSum == targetSum)) {
-                        targetSumKSizeSubsets.add(currentSubset);
-                    }
-
-                    if (currentSubsetSize < k) {
-                        subsetsAndSumMap.put(currentSubset, currentSubsetSum);
-                    }
-                }
-            }
-        }
-
-        return targetSumKSizeSubsets;
-    }
-}
-
-
-//Method 2
-
-class Solution {
-    public List<List<Integer>> combinationSum3(int k, int n) {
-        return generateKSizeTargetSumSubsets(k, n);
-    }
-
-    private List<List<Integer>> generateKSizeTargetSumSubsets(int k, int targetSum) {
-        List<List<Integer>> kSizetargetSumSubsets = new ArrayList<>();
-        List<Integer> currentSubset = new ArrayList<>();
-        int currentSubsetSum = 0, totalSubsets = 1 << 9;
-
-        for (int num = 0; num < totalSubsets; num++) {
-            for (int i = 0; i < 9; i++) {
-                if ((num & (1 << i)) != 0) {
-                    currentSubset.add(i + 1);
-                    currentSubsetSum = currentSubsetSum + i + 1;
-
-                    if (currentSubsetSum > targetSum) {
-                        break;
-                    }
-                }
-            }
-
-            if (currentSubset.size() == k && currentSubsetSum == targetSum) {
-                kSizetargetSumSubsets.add(new ArrayList<>(currentSubset));
-            }
-
-            currentSubset.clear();
-            currentSubsetSum = 0;
-        }
-
-        return kSizetargetSumSubsets;
-    }
-}
-
-
-//Recursive Approach
-
-//Method 1
-
-
-class Solution {
-    private List<List<Integer>> sizeKTargetSumSubsets;
+    // Stores all combinations that meet the size K and target sum constraints
+    private List<List<Integer>> sizeKTargetSumCombinations;
 
     public List<List<Integer>> combinationSum3(int k, int n) {
-        sizeKTargetSumSubsets = new ArrayList<>();
-        generateSizeKTargetSumSubsets(1, k, n, new ArrayList<>());
-        return sizeKTargetSumSubsets;
+        sizeKTargetSumCombinations = new ArrayList<>();
+
+        // Start recursive backtracking from number 1 to 9
+        generateSizeKTargetSumCombinations(1, k, n, new ArrayList<>());
+
+        return sizeKTargetSumCombinations;
     }
 
-    private void generateSizeKTargetSumSubsets(int currentNumber, int k, int targetSum, List<Integer> currentSubset) {
-        // Base condition: if current subset has size k and targetSum is reached, add it to the result list
-        if (currentSubset.size() == k && targetSum == 0) {
-            sizeKTargetSumSubsets.add(new ArrayList<>(currentSubset));
+    private void generateSizeKTargetSumCombinations(int currentNumber, int targetSize, int targetSum, List<Integer> combination) {
+        //If we have selected exactly 'targetSize' numbers and the remaining targetSum is 0, then the current combination is valid.
+        if (combination.size() == targetSize && targetSum == 0) {
+            sizeKTargetSumCombinations.add(new ArrayList<>(combination));
             return;
         }
 
-        // If currentNumber exceeds 9, no more numbers can be added (since we're limited to digits 1-9)
-        if (currentNumber > 9) {
-            return;
-        }
-
-        currentSubset.add(currentNumber);
         /*
-         * Early exit condition:
-         * A negative target sum cannot be achieved because, according to the problem
-         * constraints, the numbers range from 1 to 9. Additionally, we are only interested in
-         * subsets of size k.
+         * Pruning / Early Exit Conditions:
+         *
+         * 1. If currentNumber > 9:
+         *    - Only digits from 1 to 9 are allowed, so we cannot proceed further.
+         *
+         * 2. If currentNumber > targetSum:
+         *    - Since numbers are positive and increasing, including this number would exceed the target sum.
+         *
+         * 3. If combination.size() == targetSize but targetSum != 0:
+         *    - We have already picked 'targetSize' numbers, but they do not sum up to the desired total.
+         *    - This path is invalid and should be pruned.
          */
-        if (targetSum >= currentNumber && currentSubset.size() <= k) {
-            generateSizeKTargetSumSubsets(currentNumber + 1, k, targetSum - currentNumber, currentSubset);
+
+        if (currentNumber > 9 || currentNumber > targetSum || combination.size() == targetSize) {
+            return;
         }
-        currentSubset.remove(currentSubset.size() - 1);
-        generateSizeKTargetSumSubsets(currentNumber + 1, k, targetSum, currentSubset);
+
+        // Include current number in the combination
+        combination.add(currentNumber);
+
+        // Move to the next number (as each number can be used only once)
+        generateSizeKTargetSumCombinations(currentNumber + 1, targetSize, targetSum - currentNumber, combination);
+
+        // Backtrack by removing the current number
+        combination.remove(combination.size() - 1);
+
+        // Exclude the current number and explore further options
+        generateSizeKTargetSumCombinations(currentNumber + 1, targetSize, targetSum, combination);
     }
 }
+
 
 
 //Method 2
 
 class Solution {
-    private List<List<Integer>> sizeKTargetSumSubsets;
+    private List<List<Integer>> sizeKTargetSumCombinations;
 
     public List<List<Integer>> combinationSum3(int k, int n) {
-        sizeKTargetSumSubsets = new ArrayList<>();
-        generateSizeKTargetSumSubsets(1, k, n, new ArrayList<>());
-        return sizeKTargetSumSubsets;
+        sizeKTargetSumCombinations = new ArrayList<>();
+        generateSizeKTargetSumCombinations(1, k, n, new ArrayList<>());
+        return sizeKTargetSumCombinations;
     }
 
-    private void generateSizeKTargetSumSubsets(int currentNumber, int k, int targetSum, List<Integer> currentSubset) {
-        if (currentSubset.size() == k && targetSum == 0) {
-            sizeKTargetSumSubsets.add(new ArrayList<>(currentSubset));
+    private void generateSizeKTargetSumCombinations(int currentNumber, int targetSize, int targetSum, List<Integer> combination) {
+        //If we have selected exactly 'targetSize' numbers and the remaining targetSum is 0, then the current combination is valid.
+        if (combination.size() == targetSize && targetSum == 0) {
+            sizeKTargetSumCombinations.add(new ArrayList<>(combination));
             return;
         }
 
         for (int num = currentNumber; num <= 9; num++) {
-             /*
-             * Since the numbers are in increasing order, if the current number exceeds
-             * the targetSum, all subsequent numbers will also be larger. Therefore, there is no need
-             * to explore further along this path. Additionally, if the size of the current subset
-             * exceeds k, further exploration is unnecessary as we are only concerned with subsets of size k.
+            /*
+             * Pruning / Early Exit Conditions:
+             *
+             * 1. If currentNumber > targetSum:
+             *    - Since the numbers are in increasing order, if the current number exceeds
+             *      the targetSum, all subsequent numbers will also be larger.
+             *    - Hence, there is no point in exploring further down this path.
+             *
+             * 2. If combination.size() == targetSize but targetSum != 0:
+             *    - We have already picked 'targetSize' numbers, but their sum does not match the target.
+             *    - This combination is invalid and should be pruned.
              */
-            if (num > targetSum || currentSubset.size() > k) {
+            if (num > targetSum || combination.size() == targetSize) {
                 break;
             }
-            currentSubset.add(num);
-            generateSizeKTargetSumSubsets(num + 1, k, targetSum - num, currentSubset);
-            currentSubset.remove(currentSubset.size() - 1);
+            combination.add(num);
+            generateSizeKTargetSumCombinations(num + 1, targetSize, targetSum - num, combination);
+            combination.remove(combination.size() - 1);
         }
     }
 }
