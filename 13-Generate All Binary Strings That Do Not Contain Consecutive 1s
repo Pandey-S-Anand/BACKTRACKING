@@ -20,123 +20,112 @@ If n=3, the possible strings are: "000", "001", "010", "011", "100", "101", "110
 //Bruteforce Approach
 
 class Solution {
-   public static List<String> generateBinaryStrings(int n) {
-      List<String>nLengthValidBinaryStrings=new ArrayList<>();
-      int totalNLengthBinaryStrings=1<<n;  //x<<y = x*2^n
-      char[] currentBinaryString=new char[n];
+    public List<String> generateBinaryStrings(int n) {
+        List<String> nLengthValidBinaryStrings = new ArrayList<>();
 
-      for(int num=0;num<totalNLengthBinaryStrings;num++){
-          for(int i=0;i<n;i++){
-              if((num & (1 << i))!=0){
-                 currentBinaryString[n - 1 - i]='1';
-              }else{
-                 currentBinaryString[n - 1 - i]='0';
-              }
-          }
-        
-        String nLengthBinaryString=new String(currentBinaryString);
-        
-        if(!nLengthBinaryString.contains("11")){
-           nLengthValidBinaryStrings.add(nLengthBinaryString); 
+        // Total number of binary strings of length 'n' is 2^n
+        int totalNLengthBinaryStrings = 1 << n; // Same as 2^n
+
+        // Character array used to build each binary string
+        char[] binaryString = new char[n];
+
+        // Iterate over all numbers from 0 to 2^n - 1
+        for (int num = 0; num < totalNLengthBinaryStrings; num++) {
+
+            /*
+             * Construct binary representation of 'num'
+             * We check each bit from the least significant to the most significant.
+             * 'i' ranges from 0 to n-1 and we fill from right to left (n - 1 - i)
+             */
+            for (int i = 0; i < n; i++) {
+                // If the i-th bit is set, place '1', otherwise place '0'
+                if ((num & (1 << i)) != 0) {
+                    binaryString[n - 1 - i] = '1';
+                } else {
+                    binaryString[n - 1 - i] = '0';
+                }
+            }
+
+            String nLengthBinaryString = new String(binaryString);
+
+            /*
+             * Filter condition: Only add binary strings that do NOT contain "11"
+             * This ensures no two '1's are adjacent
+             */
+            if (!nLengthBinaryString.contains("11")) {
+                nLengthValidBinaryStrings.add(nLengthBinaryString);
+            }
         }
-      }
-      
-      return nLengthValidBinaryStrings;
-   }
+
+        // Return the list of all valid binary strings
+        return nLengthValidBinaryStrings;
+    }
 }
-
-/*
-if you reverse the logic as described below, you will still generate all possible combination of binary strings of length n, 
-but the lexicographical order will not be preserved. 
-
-if ((num & (1 << i)) != 0) {
-    currentBinaryString[n - 1 - i] = '0';
-} else {
-    currentBinaryString[n - 1 - i] = '1';
-}
-
-Example
-Let's illustrate with n = 3:
-
-Normal Logic (Lexicographical Order):
-
-000
-001
-010
-011
-100
-101
-110
-111
-
-Reversed Logic:
-
-111 (binary 7 in decimal)
-110 (binary 6 in decimal)
-101 (binary 5 in decimal)
-100 (binary 4 in decimal)
-011 (binary 3 in decimal)
-010 (binary 2 in decimal)
-001 (binary 1 in decimal)
-000 (binary 0 in decimal)
-
-As you can see, the reversed logic results in the strings being generated in the reverse order of their numeric values, which is not lexicographical.
-To maintain lexicographical order with reversed approach, you would need to sort the generated binary strings after generating them. 
-*/
 
 
 //Aliter
 
 class Solution {
-   private static List<String>validNLengthBinaryStrings;
+   private List<String>validNLengthBinaryStrings;
    
-   public static List<String> generateBinaryStrings(int n) {
+   public List<String> generateBinaryStrings(int n) {
       validNLengthBinaryStrings=new ArrayList<>();
       generateAllValidNLengthBinaryStrings(new char[n],0);
       return validNLengthBinaryStrings;
    }
   
-    private static void generateAllValidNLengthBinaryStrings(char[] currentBinaryString, int index) {
-        if (index == currentBinaryString.length) {
-            String nLengthBinaryString=new String(currentBinaryString);
+    private void generateAllValidNLengthBinaryStrings(char[] binaryString, int index) {
+        if (index == binaryString.length) {
+            String nLengthBinaryString=new String(binaryString);
             if(!nLengthBinaryString.contains("11")){
                validNLengthBinaryStrings.add(nLengthBinaryString);
             }
             return;
         }
 
-        currentBinaryString[index] = '0';
-        generateAllValidNLengthBinaryStrings(currentBinaryString, index + 1);
+        binaryString[index] = '0';
+        generateAllValidNLengthBinaryStrings(binaryString, index + 1);
 
-        currentBinaryString[index] = '1';
-        generateAllValidNLengthBinaryStrings(currentBinaryString, index + 1);
+        binaryString[index] = '1';
+        generateAllValidNLengthBinaryStrings(binaryString, index + 1);
     }
 }
+
 
 
 //Optimal Approach
 
 class Solution {
-    private static List<String> validNLengthBinaryStrings;
+    // List to store all valid binary strings of length 'n' that do not contain "11"
+    private List<String> validNLengthBinaryStrings;
 
-    public static List<String> generateBinaryStrings(int n) {
+    public List<String> generateBinaryStrings(int n) {
         validNLengthBinaryStrings = new ArrayList<>();
+
+        // Start building the binary string using a char array for efficiency
         generateAllValidNLengthBinaryStrings(new char[n], 0, false);
         return validNLengthBinaryStrings;
     }
 
-    private static void generateAllValidNLengthBinaryStrings(char[] currentBinaryString, int index, boolean wasLastBit1) {
-        if (index == currentBinaryString.length) {
-            validNLengthBinaryStrings.add(new String(currentBinaryString));
+    private void generateAllValidNLengthBinaryStrings(char[] binaryString, int index, boolean wasLastBit1) {
+        // Base Case: If we've filled all positions, add it to the list
+        if (index == binaryString.length) {
+            validNLengthBinaryStrings.add(new String(binaryString));
             return;
         }
 
-        currentBinaryString[index] = '0';
-        generateAllValidNLengthBinaryStrings(currentBinaryString, index + 1, false);
+        // Always allowed: Place '0' at current index
+        binaryString[index] = '0';
+        generateAllValidNLengthBinaryStrings(binaryString, index + 1, false); // Reset wasLastBit1 to false
 
+        /*
+         * Only allowed if last bit was not '1':
+         * Place '1' at current index only if previous bit was not '1'
+         * This avoids consecutive '1's ("11")
+         */
         if (!wasLastBit1) {
-            currentBinaryString[index] = '1';
-            generateAllValidNLengthBinaryStrings(currentBinaryString, index + 1, true);
+            binaryString[index] = '1';
+            generateAllValidNLengthBinaryStrings(binaryString, index + 1, true); // Mark current bit as '1'
         }
     }
 }
