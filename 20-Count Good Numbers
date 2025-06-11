@@ -1,4 +1,106 @@
-//Iterative Approach
+/*
+A digit string is a string consisting of digits 0 through 9 .
+A digit string is good if the digits (0-indexed) at even indices are even (0, 2, 4, 6 or 8) and 
+the digits at odd indices are prime (2, 3, 5 or 7)
+
+We  are asked to generate a 'good digit string' of length 'n', so index range from '0' to 'n-1' ,
+now for every even index we are having 5 choices (0, 2, 4, 6 or 8) and similar for every odd index 
+we are having 4 choices (2, 3, 5 or 7)?
+
+Therefore, at each index, we need to select a digit from the set of valid options based on whether the index is even or odd.
+*/
+
+//Bruteforce Approach
+
+//Naive Implementation
+
+class Solution {
+    private static final long MOD = 1000000007L;
+
+    // Even index → choose from these
+    private static final int[] EVEN_DIGITS = { 0, 2, 4, 6, 8 };
+
+    // Odd index → choose from these
+    private static final int[] PRIME_DIGITS = { 2, 3, 5, 7 };
+
+    public int countGoodNumbers(long n) {
+        // Create a placeholder array to hold current digits (not required, just for demonstration)
+        return (int) countGoodDigitStrings(new int[(int) n], 0);
+    }
+
+    // Recursive method to try all valid digits at current index
+    private long countGoodDigitStrings(int[] currentCombination, int index) {
+        // Base case: if all positions filled, we found a valid combination
+        if (index == currentCombination.length) {
+            return 1L;
+        }
+
+        long count = 0;
+
+        // Decide whether to pick from even or prime digits
+        int[] validDigits = (index % 2 == 0) ? EVEN_DIGITS : PRIME_DIGITS;
+
+        // Try placing each valid digit at current index and recurse
+        for (int digit : validDigits) {
+            currentCombination[index] = digit;
+            count = (count + countGoodDigitStrings(currentCombination, index + 1)) % MOD;
+        }
+
+        return count;
+    }
+}
+
+
+
+//Optimal Implementation (Same logic as the naive version, but avoids storing the current combination.)
+
+class Solution {
+    private static final long MOD = 1000000007L;
+
+    private static final int[] EVEN_DIGITS = { 0, 2, 4, 6, 8 };
+    private static final int[] PRIME_DIGITS = { 2, 3, 5, 7 };
+
+    public int countGoodNumbers(long n) {
+        // Start recursive computation from index 0
+        return (int) countGoodDigitStrings(0, n);
+    }
+
+    private long countGoodDigitStrings(int index, long n) {
+        // Base case: full string constructed
+        if (index == n) {
+            return 1L;
+        }
+
+        long count = 0;
+
+        // Choose appropriate digit set based on index parity
+        int[] validDigits = (index % 2 == 0) ? EVEN_DIGITS : PRIME_DIGITS;
+
+        // Try all valid digits for current index and recurse for next index
+        for (int digit : validDigits) {
+            count = (count + countGoodDigitStrings(index + 1, n)) % MOD;
+        }
+
+        return count;
+    }
+}
+
+/*
+ * Note:
+ * This problem is not strictly a backtracking problem, as we are not explicitly
+ * generating or printing all the combinations. However, the recursive approach
+ * used here closely resembles a backtracking methodology, especially if we were
+ * required to print or generate all valid combinations.
+ *
+ * The essence of backtracking—incrementally building solutions and exploring
+ * possibilities—is evident in how we select valid digits for even and odd indices.
+ *
+ * While there’s no pruning or explicit backtracking, the recursive exploration
+ * of valid choices aligns conceptually with backtracking techniques.
+ */
+
+
+//Optimal Approach
 
 /*
 Independence of Choices: The choices made for even indices are independent of the choices made for odd indices.
@@ -56,79 +158,6 @@ NOTE: We have not considered 7^4 in this case as the 3rd place bit is OFF
 Now, applying logic keeping this concept in mind
 */
 
-//Naive Implementation
-
-class Solution {
-    private static final long MOD = 1000000007L;
-
-    public int countGoodNumbers(long n) {
-        long evenIndicesCount = 0L, oddIndicesCount = 0L;
-
-        if (n % 2L == 0) {
-            evenIndicesCount = n / 2L;
-            oddIndicesCount = n / 2L;
-        } else {
-            evenIndicesCount = (n / 2L) + 1;
-            oddIndicesCount = (n / 2L);
-        }
-
-        long goodStringCount = myPow(5, evenIndicesCount) * myPow(4, oddIndicesCount) % MOD;
-
-        return (int) goodStringCount;
-    }
-
-    private long myPow(int base, long exponent) {
-        long result = 1L;
-
-        for (int i = 0; i < 64; i++) {
-            if ((exponent & (1L << i)) != 0) {
-                result = (result * (long) Math.pow(base, Math.pow(2L, i))) % MOD;
-            }
-        }
-
-        return result;
-    }
-}
-
-
-//Better Implementation
-
-class Solution {
-    private static final long MOD = 1000000007L;
-
-    public int countGoodNumbers(long n) {
-        long evenIndicesCount = 0L, oddIndicesCount = 0L;
-
-        if (n % 2L == 0) {
-            evenIndicesCount = n / 2L;
-            oddIndicesCount = n / 2L;
-        } else {
-            evenIndicesCount = (n / 2L) + 1;
-            oddIndicesCount = (n / 2L);
-        }
-
-        long goodStringCount = myPow(5L, evenIndicesCount) * myPow(4L, oddIndicesCount) % MOD;
-
-        return (int) goodStringCount;
-    }
-
-    private long myPow(long base, long exponent) {
-        long result = 1L;
-
-        for (int i = 0; i < 64; i++) {
-            if ((exponent & (1L << i)) != 0) {
-                result = (result * base) % MOD;
-            }
-            base = (base * base) % MOD;
-        }
-
-        return result;
-    }
-}
-
-
-//Optimal Implementation
-
 class Solution {
     private static final long MOD = 1000000007L;
 
@@ -145,100 +174,18 @@ class Solution {
         long result = 1L;
 
         while (exponent != 0) {
+            // If the current bit is set, multiply result by base
             if ((exponent & 1L) != 0) {
                 result = (result * base) % MOD;
             }
+
+            // Square the base for the next bit
             base = (base * base) % MOD;
-            exponent = exponent >> 1;
+
+            // Right shift exponent by 1 to process next bit
+            exponent >>= 1;
         }
 
         return result;
     }
 }
-
-
-/*
-A digit string is a string consisting of digits 0 through 9 that may contain leading zeros.
-A digit string is good if the digits (0-indexed) at even indices are even (0, 2, 4, 6 or 8) and 
-the digits at odd indices are prime (2, 3, 5 or 7)
-
-We  are asked to generate a 'good digit string' of length 'n', so index range from '0' to 'n-1' ,
-now for every even index we are having 5 choices (0, 2, 4, 6 or 8) and similar for every odd index 
-we are having 4 choices (2, 3, 5 or 7)?
-
-Therefore, at each index, we need to select a digit from the set of valid options based on whether the index is even or odd.
-*/
-
-
-//Recursive Approach
-
-//Naive Implementation
-
-class Solution {
-    private static final long MOD = 1000000007L;
-    private static final int[] EVEN_DIGITS = { 0, 2, 4, 6, 8 };
-    private static final int[] PRIME_DIGITS = { 2, 3, 5, 7 };
-
-    public int countGoodNumbers(long n) {
-        return (int) countGoodDigitStrings(new int[(int) n], 0);
-    }
-
-    private long countGoodDigitStrings(int[] currentCombination, int index) {
-        if (index == currentCombination.length) {
-            return 1L;
-        }
-
-        long count = 0;
-        int[] validDigits = (index % 2 == 0) ? EVEN_DIGITS : PRIME_DIGITS;
-
-        for (int digit : validDigits) {
-            currentCombination[index] = digit;
-            count = (count + countGoodDigitStrings(currentCombination, index + 1)) % MOD;
-        }
-
-        return count;
-    }
-}
-
-
-//Optimal Implementation
-
-class Solution {
-    private static final long MOD = 1000000007L;
-    private static final int[] EVEN_DIGITS = { 0, 2, 4, 6, 8 };
-    private static final int[] PRIME_DIGITS = { 2, 3, 5, 7 };
-
-    public int countGoodNumbers(long n) {
-        return (int) countGoodDigitStrings(0, n);
-    }
-
-    private long countGoodDigitStrings(int index, long n) {
-        if (index == n) {
-            return 1L;
-        }
-
-        long count = 0;
-
-        int[] validDigits = (index % 2 == 0) ? EVEN_DIGITS : PRIME_DIGITS;
-
-        for (int digit : validDigits) {
-            count = (count + countGoodDigitStrings(index + 1, n)) % MOD;
-        }
-
-        return count;
-    }
-}
-
-/*
- * Note:
- * This problem is not strictly a backtracking problem, as we are not explicitly
- * generating or printing all the combinations. However, the recursive approach
- * used here closely resembles a backtracking methodology, especially if we were
- * required to print or generate all valid combinations.
- *
- * The essence of backtracking—incrementally building solutions and exploring
- * possibilities—is evident in how we select valid digits for even and odd indices.
- *
- * While there’s no pruning or explicit backtracking, the recursive exploration
- * of valid choices aligns conceptually with backtracking techniques.
- */
