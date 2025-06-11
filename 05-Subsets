@@ -105,6 +105,7 @@ class Solution {
 }
 
 
+
 // Method 2 : Bit Manipulation
 
 /*
@@ -149,61 +150,35 @@ class Solution {
  * position the we print the element present at (i-1)th index in the array.
  */
 
-
-// Intuitive Implementation
-
 class Solution {
     public List<List<Integer>> subsets(int[] arr) {
+        // This list will hold all the generated subsets
         List<List<Integer>> subsets = new ArrayList<>();
-        List<Integer> currentSubset = new ArrayList<>();
 
-        // Total number of subsets is 2^n
-        int totalSubsets = 1 << arr.length; // x << y = x * 2^n
+        // Total number of subsets = 2^n (where n is the length of the input array)
+        int totalSubsets = 1 << arr.length; // Equivalent to 2^arr.length
 
-        // Generate all subsets
+        // Loop through all possible binary representations from 0 to 2^n - 1
         for (int num = 0; num < totalSubsets; num++) {
-            String binaryWithoutLeadingZeroes = Integer.toBinaryString(num);// to get binary representation without leading zeroes
-            /*
-             * Check each bit in binary representation of number(starting from right to
-             * left) to decide which elements to include in the current subset,
-             * if bit is set include the element corresponding to that position in the array
-             */
-            int length = binaryWithoutLeadingZeroes.length();
-            for (int i = length - 1; i >= 0; i--) {
-                if (binaryWithoutLeadingZeroes.charAt(i) == '1') {
-                    currentSubset.add(arr[length - i - 1]);
-                }
-            }
-            subsets.add(new ArrayList<>(currentSubset));
-            currentSubset.clear();
-        }
+            // This list will hold the current subset based on bits set in 'num'
+            List<Integer> subset = new ArrayList<>();
 
-        return subsets;
-    }
-}
-
-
-// Optimal Implementation
-
-class Solution {
-    public List<List<Integer>> subsets(int[] arr) {
-        List<List<Integer>> subsets = new ArrayList<>();
-        List<Integer> currentSubset = new ArrayList<>();
-        int totalSubsets = 1 << arr.length; // x << y = x * 2^n
-
-        for (int num = 0; num < totalSubsets; num++) {
+            // Check each bit of 'num'
             for (int i = 0; i < arr.length; i++) {
+                // If the i-th bit is set in 'num', include arr[i] in current subset
                 if ((num & (1 << i)) != 0) {
-                    currentSubset.add(arr[i]);
+                    subset.add(arr[i]);
                 }
             }
-            subsets.add(new ArrayList<>(currentSubset));
-            currentSubset.clear();
+
+            // Add the generated subset to the result list
+            subsets.add(subset);
         }
 
         return subsets;
     }
 }
+
 
 
 // Recursive Approach
@@ -313,22 +288,69 @@ class Solution {
 
 
 //Method 2
+/*
+(index=0) []
+|
+|-- i=0 -> add 1 -> [1]
+|   |
+|   |-- (index=1)
+|   |   |
+|   |   |-- i=1 -> add 2 -> [1, 2]
+|   |   |   |
+|   |   |   |-- (index=2)
+|   |   |   |   |
+|   |   |   |   |-- i=2 -> add 3 -> [1, 2, 3] ✅
+|   |   |   |   |   └── backtrack -> remove 3 -> [1, 2]
+|   |   |   |   └── loop ends (i=2)
+|   |   |   └── backtrack -> remove 2 -> [1]
+|   |   |
+|   |   |-- i=2 -> add 3 -> [1, 3] ✅
+|   |   |   └── backtrack -> remove 3 -> [1]
+|   |   └── loop ends (i=2)
+|   └── backtrack -> remove 1 -> []
+|
+|-- i=1 -> add 2 -> [2]
+|   |
+|   |-- (index=2)
+|   |   |
+|   |   |-- i=2 -> add 3 -> [2, 3] ✅
+|   |   |   └── backtrack -> remove 3 -> [2]
+|   |   └── loop ends (i=2)
+|   └── backtrack -> remove 2 -> []
+|
+|-- i=2 -> add 3 -> [3] ✅
+|   └── backtrack -> remove 3 -> []
+└── loop ends (i=2)
+*/
 
 class Solution {
+    // Global list to store all subsets
     private List<List<Integer>> subsets;
 
     public List<List<Integer>> subsets(int[] arr) {
+        // Initialize the result list
         subsets = new ArrayList<>();
+
+        // Start recursive generation from index 0 with an empty subset
         generateSubsets(arr, 0, new ArrayList<>());
+
+        // Return the final list of subsets
         return subsets;
     }
 
     private void generateSubsets(int[] arr, int index, List<Integer> currentSubset) {
+        // Step 1: Add the current subset (copy) to the result list
         subsets.add(new ArrayList<>(currentSubset));
 
+        // Step 2: Try adding each remaining element to the current subset
         for (int i = index; i < arr.length; i++) {
+            // Choose: Include arr[i] in the current subset
             currentSubset.add(arr[i]);
+
+            // Explore: Recursively generate subsets including arr[i]
             generateSubsets(arr, i + 1, currentSubset);
+
+            // (backtrack): Remove the last added element before the next iteration
             currentSubset.remove(currentSubset.size() - 1);
         }
     }
