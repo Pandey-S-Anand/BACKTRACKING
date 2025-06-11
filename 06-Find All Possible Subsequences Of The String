@@ -8,50 +8,20 @@ class Solution {
         subsequences.add(""); // Initialize with the empty subsequence
 
         for (int i = 0; i < str.length(); i++) {
-            int currentSize = subsequences.size();
-            for (int j = 0; j < currentSize; j++) {
+            int existingSubsequenceCount = subsequences.size(); // Number of subsequences so far
+            for (int j = 0; j < existingSubsequenceCount; j++) {
                 subsequences.add(subsequences.get(j) + str.charAt(i));
             }
         }
+
         subsequences.remove(""); // Remove the empty subsequence
-
-        Collections.sort(subsequences); // Sort the subsequences in alphabetical order
-
+        Collections.sort(subsequences); // Sort alphabetically
         return subsequences;
     }
 }
+
 
 //Method 2
-
-//Naive Implementation 
-
-class Solution {
-    public List<String> AllPossibleStrings(String str) {
-        List<String> subsequences = new ArrayList<>();
-        StringBuilder currentSubsequence = new StringBuilder();
-
-        int totalSubsequences = 1 << str.length();
-
-        for (int num = 1; num < totalSubsequences; num++) {
-            String binaryWithoutLeadingZeroes = Integer.toBinaryString(num);
-
-            int length = binaryWithoutLeadingZeroes.length();
-            for (int i = length - 1; i >= 0; i--) {
-                if (binaryWithoutLeadingZeroes.charAt(i) == '1') {
-                    currentSubsequence.append(str.charAt(length - i - 1));
-                }
-            }
-
-            subsequences.add(currentSubsequence.toString());
-            currentSubsequence.setLength(0);
-        }
-
-        Collections.sort(subsequences);
-        return subsequences;
-    }
-}
-
-//Optimal Implementation 
 
 class Solution {
     public List<String> AllPossibleStrings(String str) {
