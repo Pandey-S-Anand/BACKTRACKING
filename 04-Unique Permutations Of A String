@@ -33,106 +33,69 @@ The distinct permutations of "AAB" are: "AAB", "ABA", and "BAA".
 
 //Method 1
 
-//Brutefore Approach
-
 //Naive Implementation
 
 class Solution {
+    // Set to store all unique generated permutations
     private Set<String> uniquePermutations;
 
-    public List<String> find_permutation(String str) {
+    public ArrayList<String> findPermutation(String str) {
         uniquePermutations = new HashSet<>();
-        findUniquePermutations(str, new StringBuilder());
-        List<String> sortedUniquePermutations = new ArrayList<>(uniquePermutations);
-        Collections.sort(sortedUniquePermutations);
-        return sortedUniquePermutations;
+        findUniquePermutations(str, new StringBuilder(), new boolean[str.length()]);
+        // Convert set to list before returning
+        return new ArrayList<>(uniquePermutations);
     }
 
-    private void findUniquePermutations(String str, StringBuilder permutation) {
-        if (str.isEmpty()) {
-            String currentPermutation = permutation.toString();
-            if (!uniquePermutations.contains(currentPermutation)) {
-                uniquePermutations.add(currentPermutation);
-            }
-            return;
-        }
-
-        for (int i = 0; i < str.length(); i++) {
-            permutation.append(str.charAt(i));
-            findUniquePermutations(str.substring(0, i) + str.substring(i + 1), permutation);
-            permutation.setLength(permutation.length() - 1);
-        }
-    }
-}
-
-//Optimal implementation
-
-class Solution {
-    private Set<String> sortedUniquePermutations;
-
-    public List<String> findPermutation(String str) {
-        sortedUniquePermutations = new TreeSet<>();
-        findUniquePermutations(str, new StringBuilder());
-        return new ArrayList<>(sortedUniquePermutations);
-    }
-
-    private void findUniquePermutations(String str, StringBuilder permutation) {
-        if (str.isEmpty()) {
-            String currentPermutation = permutation.toString();
-            if (!sortedUniquePermutations.contains(currentPermutation)) {
-                sortedUniquePermutations.add(currentPermutation);
-            }
-            return;
-        }
-
-        for (int i = 0; i < str.length(); i++) {
-            permutation.append(str.charAt(i));
-            findUniquePermutations(str.substring(0, i) + str.substring(i + 1), permutation);
-            permutation.setLength(permutation.length() - 1);
-        }
-    }
-}
-
-
-//Better Approach
-
-//Naive implementation
-
-class Solution {
-    private List<String> uniquePermutations;
-
-    public List<String> find_permutation(String str) {
-        /*
-         * If we sort a string and then generate all its permutations, the
-         * resulting permutations will be in lexicographical order (dictionary order).
-         * Sorting the string arranges its characters in alphabetical order, which
-         * directly influences the order in which the permutations are generated.
-         */
-        char[] arr = str.toCharArray();
-        Arrays.sort(arr);
-        uniquePermutations = new ArrayList<>();
-        findUniquePermutations(arr, new StringBuilder(), new boolean[str.length()]);
-        return uniquePermutations;
-    }
-
-    private void findUniquePermutations(char[] arr, StringBuilder permutation, boolean[] visited) {
-        if (permutation.length() == arr.length) {
+    private void findUniquePermutations(String str, StringBuilder permutation, boolean[] visited) {
+        if (permutation.length() == str.length()) {
             uniquePermutations.add(permutation.toString());
             return;
         }
-        // To keep track of elements used at the current level of recursion
-        Set<Character> used = new HashSet<>();
 
-        for (int i = 0; i < arr.length; i++) {
-            if (used.contains(arr[i])) {
-                continue; // Skip duplicates
+        for (int i = 0; i < str.length(); i++) {
+            if (!visited[i]) {
+                used[str.charAt(i)] = true;
+                visited[i] = true;
+                permutation.append(str.charAt(i));
+                findUniquePermutations(str, permutation, visited);
+                permutation.setLength(permutation.length() - 1);
+                visited[i] = false;
+            }
+        }
+    }
+}
+
+
+//Better Implementation
+
+class Solution {
+    private ArrayList<String> uniquePermutations;
+
+    public ArrayList<String> findPermutation(String str) {
+        uniquePermutations = new ArrayList<>();
+        findUniquePermutations(str, new StringBuilder(), new boolean[str.length()]);
+        return uniquePermutations;
+    }
+
+    private void findUniquePermutations(String str, StringBuilder permutation, boolean[] visited) {
+        if (permutation.length() == str.length()) {
+            uniquePermutations.add(permutation.toString());
+            return;
+        }
+
+        // To keep track of elements used at the current level of recursion
+        boolean[] used = new boolean[128];
+
+        for (int i = 0; i < str.length(); i++) {
+            if (used[str.charAt(i)]) {
+                continue;
             }
 
             if (!visited[i]) {
-                used.add(arr[i]);
+                used[str.charAt(i)] = true;
                 visited[i] = true;
-                permutation.append(arr[i]);
-                findUniquePermutations(arr, permutation, visited);
+                permutation.append(str.charAt(i));
+                findUniquePermutations(str, permutation, visited);
                 permutation.setLength(permutation.length() - 1);
                 visited[i] = false;
             }
@@ -144,12 +107,12 @@ class Solution {
 //Optimal Implementation
 
 class Solution {
-    private List<String> uniquePermutations;
+    private ArrayList<String> uniquePermutations;
 
-    public List<String> find_permutation(String str) {
-        char[] arr = str.toCharArray();
-        Arrays.sort(arr);
+    public ArrayList<String> findPermutation(String str) {
         uniquePermutations = new ArrayList<>();
+        char[] arr = str.toCharArray();
+        Arrays.sort(arr); // Sorting helps in detecting duplicates
         findUniquePermutations(arr, new StringBuilder(), new boolean[str.length()]);
         return uniquePermutations;
     }
@@ -160,44 +123,6 @@ class Solution {
             return;
         }
 
-        boolean[] used = new boolean[128];
-
-        for (int i = 0; i < arr.length; i++) {
-            if (used[arr[i]]) {
-                continue;
-            }
-
-            if (!visited[i]) {
-                used[arr[i]] = true;
-                visited[i] = true;
-                permutation.append(arr[i]);
-                findUniquePermutations(arr, permutation, visited);
-                permutation.setLength(permutation.length() - 1);
-                visited[i] = false;
-            }
-        }
-    }
-}
-
-
-//Optimal Approach
-
-class Solution {
-    private List<String> uniquePermutations;
-
-    public List<String> find_permutation(String str) {
-        char[] arr = str.toCharArray();
-        Arrays.sort(arr);
-        uniquePermutations = new ArrayList<>();
-        findUniquePermutations(arr, new StringBuilder(), new boolean[str.length()]);
-        return uniquePermutations;
-    }
-
-    private void findUniquePermutations(char[] arr, StringBuilder permutation, boolean[] visited) {
-        if (permutation.length() == arr.length) {
-            uniquePermutations.add(permutation.toString());
-            return;
-        }
 
         for (int i = 0; i < arr.length; i++) {
             /*
@@ -208,6 +133,7 @@ class Solution {
              * 2: If arr[i] is the same as arr[i - 1] (i.e., a duplicate) and arr[i - 1] has
              * not been used (!visited[i - 1]), it means we are at the same level of
              * recursion and should skip arr[i] to avoid generating a duplicate permutation.
+             * (visited[i - 1] is false because we have already backtracked and unvisited it, meaning we already explored the subtree for arr[i - 1] at this level.)
              * If arr[i] is the same as arr[i - 1] (i.e., a duplicate) and arr[i - 1] has
              * been used (visited[i - 1]==true) it means we are at different level of
              * recursion and can proceed with a duplicate element as it generates a new
@@ -231,35 +157,28 @@ class Solution {
 
 //Method 2
 
-//Bruteforce Approach
-
 //Naive implementation 
 
 class Solution {
+    // Set to store only unique permutations (avoids duplicates automatically)
     private Set<String> uniquePermutations;
 
-    public List<String> find_permutation(String str) {
+    public ArrayList<String> findPermutation(String str) {
         uniquePermutations = new HashSet<>();
-        findUniquePermutations(str.toCharArray(), 0);
-        List<String>sortedUniquePermutations=new ArrayList<>(uniquePermutations);
-        Collections.sort(sortedUniquePermutations);
-        return sortedUniquePermutations;
+        findPermutations(str.toCharArray(), 0);
+        // Convert set to list before returning
+        return new ArrayList<>(uniquePermutations);
     }
 
-    private void findUniquePermutations(char[] arr, int index) {
+    private void findPermutations(char[] arr, int index) {
         if (index == arr.length) {
-            String currentPermutation = new String(arr);
-
-            if (!uniquePermutations.contains(currentPermutation)) {
-                uniquePermutations.add(currentPermutation);
-            }
-
+            uniquePermutations.add(new String(arr));
             return;
         }
 
         for (int i = index; i < arr.length; i++) {
             swap(arr, index, i);
-            findUniquePermutations(arr, index + 1);
+            findPermutations(arr, index + 1);
             swap(arr, index, i);
         }
     }
@@ -274,43 +193,6 @@ class Solution {
 
 //Optimal implementation
 
-class Solution {
-    private Set<String> uniquePermutations;
-
-    public List<String> find_permutation(String str) {
-        uniquePermutations = new TreeSet<>();
-        findUniquePermutations(str.toCharArray(), 0);
-        return new ArrayList<>(uniquePermutations);
-    }
-
-    private void findUniquePermutations(char[] arr, int index) {
-        if (index == arr.length) {
-            String currentPermutation = new String(arr);
-
-            if (!uniquePermutations.contains(currentPermutation)) {
-                uniquePermutations.add(currentPermutation);
-            }
-
-            return;
-        }
-
-        for (int i = index; i < arr.length; i++) {
-            swap(arr, index, i);
-            findUniquePermutations(arr, index + 1);
-            swap(arr, index, i);
-        }
-    }
-
-    private void swap(char[] arr, int i, int j) {
-        char temp = arr[i];
-        arr[i] = arr[j];
-        arr[j] = temp;
-    }
-}
-
-
-//Optimal Approach
-
 /*
 Purpose of sorting :
 Sorting is used to bring duplicate elements together, so adjacent duplicates can be easily identified and skipped during permutation generation.
@@ -320,56 +202,12 @@ Why sorting and then skipping won't work here ?
 Because we are manipulating the input array itself to form the permutation which involves swapping. If you sort the array and then swap elements, the order of elements is modified,the array is no longer in its sorted order, which invalidates the duplicate-checking logic (arr[i] == arr[i - 1]) that assumes adjacent duplicates.
 */
 
-//Naive Implementation
-
 class Solution {
-    private List<String> uniquePermutations;
+    private ArrayList<String> uniquePermutations;
 
-    public List<String> find_permutation(String str) {
+    public ArrayList<String> findPermutation(String str) {
         uniquePermutations = new ArrayList<>();
         findUniquePermutations(str.toCharArray(), 0);
-        Collections.sort(uniquePermutations);
-        return uniquePermutations;
-    }
-
-    private void findUniquePermutations(char[] arr, int index) {
-        if (index == arr.length) {
-            uniquePermutations.add(new String(arr));
-            return;
-        }
-
-        // To keep track of elements used at the current level of recursion
-        Set<Character> used = new HashSet<>();
-
-        for (int i = index; i < arr.length; i++) {
-            if (used.contains(arr[i])) {
-                continue; // Skip duplicates
-            }
-
-            used.add(arr[i]);
-            swap(arr, index, i);
-            findUniquePermutations(arr, index + 1);
-            swap(arr, index, i);
-        }
-    }
-
-    private void swap(char[] arr, int i, int j) {
-        char temp = arr[i];
-        arr[i] = arr[j];
-        arr[j] = temp;
-    }
-}
-
-
-// Optimal implementation
-
-class Solution {
-    private List<String> uniquePermutations;
-
-    public List<String> find_permutation(String str) {
-        uniquePermutations = new ArrayList<>();
-        findUniquePermutations(str.toCharArray(), 0);
-        Collections.sort(uniquePermutations);
         return uniquePermutations;
     }
 
@@ -383,7 +221,6 @@ class Solution {
         boolean[] used = new boolean[128];
 
         for (int i = index; i < arr.length; i++) {
-
             if (used[arr[i]]) {
                 continue; // Skip duplicates
             }
@@ -400,3 +237,4 @@ class Solution {
         arr[i] = arr[j];
         arr[j] = temp;
     }
+}
